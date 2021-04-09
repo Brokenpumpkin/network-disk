@@ -1,0 +1,87 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        file-extension: yml
+#        shared-dataids: common-${spring.profiles.active}.yaml,application-${spring.profiles.active}.yml
+#        namespace: 86a064b3-e2b3-4272-a9de-b51633df9a84
+  datasource:
+    druid:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://127.0.0.1:3306/network_disk?useUnicode=true&characterEncoding=utf8&useSSL=false&allowMultiQueries=true&autoReconnect=true&autoReconnectForPools=true
+      username: root
+      password: 123456
+  jackson:
+    default-property-inclusion: NON_NULL
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+
+up:
+  swagger:
+    enabled: true
+    title: cloud-printer
+    description: \u57FA\u4E8Ebootstrap\u98CE\u683C\u7684api\u6587\u6863
+    version: 1.0.0-SNAPSHOT
+    license: Apache License, Version 2.0
+    license-url: https://www.apache.org/licenses/LICENSE-2.0.html
+    terms-of-service-url: http://www.ffcs.cn/
+    contact:
+      name: zhanyr
+      url: http://localhost:${server.port}/doc.html
+      email: zhanyr@ffcs.cn
+    base-package: cn.ffcs.up.printer.controller
+    base-path: /**
+  oauth2:
+    url-permit-all:
+      - /swagger-ui.html
+      - /*/swagger-resources/**
+      - /swagger-resources/**
+      - /doc.html
+      - /v2/api-docs
+      - /*/v2/api-docs
+      - /*/v2/api-docs-ext
+      - /druid/**
+      - /webjars/**
+      - /websocket/**
+
+info:
+  version: "@project.version@"
+  artifact: "@project.artifactId@"
+  name: "@project.name@"
+  description: "@project.description@"
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: debug
+    com.len.mapper: DEBUG
+    org.activiti.engine.impl.persistence.entity: trace
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**Mapper.xml
+  typeAliasesPackage: cn.ffcs.up.printer.entity
+  global-config:
+    id-type: 1
+    field-strategy: 2
+    db-column-underline: true
+    refresh-mapper: true
+    logic-delete-value: 0
+    logic-not-delete-value: 1
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+
+#\u672C\u5730\u5B58\u50A8\u8DEF\u5F84
+fileRootPath: F:/logs/
+#\u4E34\u65F6\u5B58\u50A8\u8DEF\u5F84
+tempPath: F:/logs/tmpUpload/
+##\u672C\u5730\u5B58\u50A8\u8DEF\u5F84
+#fileRootPath: F:/logs/
+##\u4E34\u65F6\u5B58\u50A8\u8DEF\u5F84
+#tempPath: F:/logs/tmpUpload/
+#logging:
+#  file:
+#    name: F:/logs/pan.log

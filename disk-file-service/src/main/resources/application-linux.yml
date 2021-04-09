@@ -1,0 +1,5 @@
+fileRootPath: /root/pan/
+tempPath: /root/pan/tmpUpload/
+logging:
+  file:
+    name: pan.log
