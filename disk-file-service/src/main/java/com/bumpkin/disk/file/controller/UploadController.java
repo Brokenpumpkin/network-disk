@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
  * @Author: linzhiquan
  * @CreateTime: 2021/04/07 20:13
  */
-@RequestMapping("/Upload")
+@RequestMapping("/upload")
 @RestController
 public class UploadController {
 
@@ -28,7 +28,7 @@ public class UploadController {
         if (file.isEmpty()) {
             return ResponseResult.createErrorResult("请选择要上传的文件！");
         }
-        // 获取用户名
+        //todo 获取用户名
         String userName = WebUtil.getUserNameByRequest(request);
         // 上传文件
         // 反馈用户信息

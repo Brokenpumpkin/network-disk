@@ -74,14 +74,10 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     cache-enabled: false
 
-#\u672C\u5730\u5B58\u50A8\u8DEF\u5F84
+
 fileRootPath: F:/logs/
-#\u4E34\u65F6\u5B58\u50A8\u8DEF\u5F84
 tempPath: F:/logs/tmpUpload/
-##\u672C\u5730\u5B58\u50A8\u8DEF\u5F84
-#fileRootPath: F:/logs/
-##\u4E34\u65F6\u5B58\u50A8\u8DEF\u5F84
-#tempPath: F:/logs/tmpUpload/
-#logging:
-#  file:
-#    name: F:/logs/pan.log
+key: aosdifu234oiu348f
+secretLen: 4
+expireDays: 3
+size: 50
