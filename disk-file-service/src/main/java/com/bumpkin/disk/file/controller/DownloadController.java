@@ -19,8 +19,8 @@ import javax.servlet.http.HttpServletRequest;
  * @CreateTime: 2021/04/07 20:13
  */
 @Slf4j
-@RequestMapping("/download")
 @RestController
+@RequestMapping("/download")
 public class DownloadController {
 
     @Value("${fileRootPath}")
@@ -80,6 +80,7 @@ public class DownloadController {
     public String test(@RequestParam String fileName, String path, HttpServletRequest request) {
         String userName = WebUtil.getUserNameByRequest(request);
         String link = fileService.download(fileName, userName, path);
+
         return link;
     }
 }

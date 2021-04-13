@@ -1,6 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
-### Example user template template
-### Example user template
+### Example diskUser template template
+### Example diskUser template
 
 **/auto-generate-code/
 # IntelliJ project files
@@ -106,8 +106,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-### Example user template template
-### Example user template
+### Example diskUser template template
+### Example diskUser template
 
 # IntelliJ project files
 .idea
@@ -119,7 +119,7 @@ gen### SublimeText template
 *.tmPreferences.cache
 *.stTheme.cache
 
-# Workspace files are user-specific
+# Workspace files are diskUser-specific
 *.sublime-workspace
 
 # Project files should be checked into the repository, unless a significant
@@ -137,7 +137,7 @@ Package Control.system-ca-bundle
 Package Control.cache/
 Package Control.ca-certs/
 Package Control.merged-ca-bundle
-Package Control.user-ca-bundle
+Package Control.diskUser-ca-bundle
 oscrypto-ca-bundle.crt
 bh_unicode_properties.cache
 
@@ -194,7 +194,7 @@ buildNumber.properties
 
 # User-specific files
 *.suo
-*.user
+*.diskUser
 *.userosscache
 *.sln.docstates
 
@@ -305,7 +305,7 @@ $tf/
 # ReSharper is a .NET coding add-in
 _ReSharper*/
 *.[Rr]e[Ss]harper
-*.DotSettings.user
+*.DotSettings.diskUser
 
 # JustCode is a .NET coding add-in
 .JustCode
@@ -619,8 +619,8 @@ local.properties
 .cache-main
 .scala_dependencies
 .worksheet
-### Example user template template
-### Example user template
+### Example diskUser template template
+### Example diskUser template
 
 # IntelliJ project files
 .idea

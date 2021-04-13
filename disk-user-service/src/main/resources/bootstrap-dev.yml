@@ -1,0 +1,56 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        file-extension: yml
+  #        shared-dataids: common-${spring.profiles.active}.yaml,application-${spring.profiles.active}.yml
+  #        namespace: 86a064b3-e2b3-4272-a9de-b51633df9a84
+  datasource:
+    druid:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=utf8&useSSL=false&allowMultiQueries=true&autoReconnect=true&autoReconnectForPools=true
+      username: root
+      password: 123456
+  jackson:
+    default-property-inclusion: NON_NULL
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    timeout: 30000
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: -1
+        max-idle: 8
+        min-idle: 0
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**Mapper.xml
+  typeAliasesPackage: cn.ffcs.up.printer.entity
+  global-config:
+    id-type: 1
+    field-strategy: 2
+    db-column-underline: true
+    refresh-mapper: true
+    logic-delete-value: 0
+    logic-not-delete-value: 1
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+
+security:
+  oauth2:
+    resource:
+      token-info-uri: http://127.0.0.1:50002 #单机环境使用固定IP地址
+      loadBalanced: true   #使用注册中心时候开启负载均衡
+      #token-info-uri: http://cloud-auth/oauth/check_token #使用注册中心时候根据服务名请求
+    client:
+      client-id: client_1
+      client-secret: 123456
+      scope: all
+

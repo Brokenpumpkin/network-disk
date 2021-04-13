@@ -1,6 +1,6 @@
 package com.bumpkin.disk.file.util;
 
-import com.bumpkin.disk.entities.User;
+import com.bumpkin.disk.entities.DiskUser;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -10,11 +10,11 @@ import javax.servlet.http.HttpServletRequest;
 public class WebUtil {
 
     public static String getUserNameByRequest(HttpServletRequest request) {
-        User user = (User) request.getSession().getAttribute("user");
+        DiskUser diskUser = (DiskUser) request.getSession().getAttribute("user");
         String userName = "null";
-        if(user == null || user.getUserName() == null) {
+        if(diskUser == null || diskUser.getUsername() == null) {
             return userName;
         }
-        return user.getUserName();
+        return diskUser.getUsername();
     }
 }

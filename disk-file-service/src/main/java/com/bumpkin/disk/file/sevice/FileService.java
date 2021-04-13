@@ -1,14 +1,14 @@
 package com.bumpkin.disk.file.sevice;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.bumpkin.disk.file.entity.File;
+import com.bumpkin.disk.file.entity.DiskFile;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @Author: linzhiquan
  * @CreateTime: 2021/04/09 11:04
  */
-public interface FileService extends IService<File> {
+public interface FileService extends IService<DiskFile> {
 
     /**
      *

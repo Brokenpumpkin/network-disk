@@ -2,16 +2,21 @@ package com.bumpkin.disk.file.controller;
 
 import cn.hutool.system.SystemUtil;
 import com.bumpkin.disk.file.sevice.FileService;
+import com.bumpkin.disk.file.util.MyFileUtil;
 import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.result.ResponseResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author: linzhiquan
@@ -19,6 +24,7 @@ import java.io.File;
  */
 @Slf4j
 @RestController
+@RequestMapping(value = "/file")
 public class FileController {
 
     @Value("${fileRootPath}")
@@ -107,5 +113,27 @@ public class FileController {
         } else {
             return ResponseResult.createErrorResult("移动失败！");
         }
+    }
+
+    @GetMapping(value = "/getUserSpaceSize")
+    public ResponseResult getUserSpaceSize(HttpServletRequest request) {
+        // 普通用户限制80G，guest用户限制40G，
+        String userName = WebUtil.getUserNameByRequest(request);
+        Map<String, String> spaceMap = new HashMap<>();
+        spaceMap.put("totalSpace", "80");
+        double totalSpace = 80;
+        if ("guest".equals(userName)) {
+            spaceMap.put("totalSpace", "40");
+            totalSpace = 40;
+        }
+        long dirlength = MyFileUtil.getDirSpaceSize(fileRootPath + userName);
+        double dirlengthDouble = dirlength / 1024.0 / 1024 / 1024;
+        String usedeSpace = String.format("%.2f", dirlengthDouble);
+        log.warn("usedeSpace:{}", usedeSpace);
+        String freeSpace = String.format("%.2f", totalSpace - Double.parseDouble(usedeSpace));
+        log.warn("freeSpace:{}", freeSpace);
+        spaceMap.put("freeSpace", freeSpace);
+
+        return ResponseResult.createSuccessResult(spaceMap);
     }
 }
