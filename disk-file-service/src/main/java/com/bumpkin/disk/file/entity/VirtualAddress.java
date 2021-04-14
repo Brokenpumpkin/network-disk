@@ -35,15 +35,14 @@ public class VirtualAddress extends BaseEntity {
      */
     private String fileName;
 
-    private Integer addrType;
-
-    private String fileMd5;
-
     /**
      * 父级路径
      */
     private String parentPath;
 
+    /**
+     * 文件大小
+     */
     private Integer fileSize;
 
     /**
@@ -51,7 +50,7 @@ public class VirtualAddress extends BaseEntity {
      */
     private Integer isDir;
 
-//    private Date createTime;
-//
-//    private Date updateTime;
+    private Date createTime;
+
+    private Date updateTime;
 }

@@ -17,4 +17,7 @@ public class WebUtil {
         }
         return diskUser.getUsername();
     }
+    public static DiskUser getUserByRequest(HttpServletRequest request) {
+        return (DiskUser) request.getSession().getAttribute("user");
+    }
 }

@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.SpringCloudApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
 
 /**
  * @Author: linzhiquan
@@ -16,6 +17,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringCloudApplication
 //@SpringBootApplication
 @MapperScan(basePackages = {"com.bumpkin.disk.file.dao"})
+@ComponentScan(basePackages = {"com.bumpkin.disk.utils"})
 public class FileServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FileServiceApplication.class, args);

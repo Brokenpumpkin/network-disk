@@ -8,6 +8,6 @@ import com.bumpkin.disk.file.entity.DiskFile;
  * @CreateTime: 2021/04/07 21:05
  */
 
-public interface FileMapper extends BaseMapper<DiskFile> {
+public interface DiskFileMapper extends BaseMapper<DiskFile> {
 
 }

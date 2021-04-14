@@ -1,10 +1,13 @@
 package com.bumpkin.disk.user.controller;
 
+import cn.hutool.json.JSONUtil;
+import com.alibaba.nacos.client.utils.JSONUtils;
 import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.result.ResponseResult;
 import com.bumpkin.disk.user.dto.DiskUserLoginDto;
 import com.bumpkin.disk.user.dto.DiskUserRegisterDto;
 import com.bumpkin.disk.user.service.DiskUserService;
+import com.bumpkin.disk.utils.RedisUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import springfox.documentation.spring.web.json.Json;
 
 import javax.validation.Valid;
 import java.util.Collections;
@@ -48,6 +52,9 @@ public class DiskUserController {
     @Autowired
     private DiskUserService diskUserService;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     @ApiOperation(value = "登录")
     @PostMapping(value = "/login")
     public ResponseResult login(@RequestBody @Valid DiskUserLoginDto userLoginDto, BindingResult result) {
@@ -57,7 +64,7 @@ public class DiskUserController {
         String username = userLoginDto.getUsername();
         String phoneNum = userLoginDto.getPhoneNum();
         String password = userLoginDto.getPassword();
-        DiskUser diskUser = diskUserService.getUserByPhone(phoneNum);
+        DiskUser diskUser = diskUserService.getUserByUsername(username);
         if (diskUser == null) {
             return ResponseResult.createErrorResult("用户不存在！");
         }
@@ -71,6 +78,8 @@ public class DiskUserController {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor(clientId, clientSecret));
         OAuth2AccessToken token = restTemplate.postForObject(tokenUrl +"/oauth/token",parameters,OAuth2AccessToken.class);
+        assert token != null;
+        redisUtil.set(token.getValue(), JSONUtil.toJsonStr(diskUser));
         return ResponseResult.createSuccessResult(token, "登录成功！");
     }
 

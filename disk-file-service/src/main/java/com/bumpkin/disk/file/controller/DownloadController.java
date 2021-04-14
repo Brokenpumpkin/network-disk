@@ -1,9 +1,10 @@
 package com.bumpkin.disk.file.controller;
 
-import com.bumpkin.disk.file.sevice.FileService;
+import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.util.FileSplitUtil;
 import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.result.ResponseResult;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
  * @Author: linzhiquan
  * @CreateTime: 2021/04/07 20:13
  */
+@Api(tags = "下载文件")
 @Slf4j
 @RestController
 @RequestMapping("/download")
@@ -30,7 +32,7 @@ public class DownloadController {
     public static int size;
 
     @Autowired
-    public FileService fileService;
+    public DiskFileService diskFileService;
 
     @Value("${size}")
     public void setSize(int size) {
@@ -56,7 +58,7 @@ public class DownloadController {
         String userName = WebUtil.getUserNameByRequest(request);
         //        String userName ="zc";
         // 下载文件，获取下载路径,这个是 个映射的路径
-        String link = fileService.download(fileName, userName, path);
+        String link = diskFileService.download(fileName, userName, path);
         try {
             //这里校验要填真实的路经
             String newLink = link.replace("/data/", fileRootPath);
@@ -79,7 +81,7 @@ public class DownloadController {
     @GetMapping(value = "/test")
     public String test(@RequestParam String fileName, String path, HttpServletRequest request) {
         String userName = WebUtil.getUserNameByRequest(request);
-        String link = fileService.download(fileName, userName, path);
+        String link = diskFileService.download(fileName, userName, path);
 
         return link;
     }

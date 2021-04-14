@@ -1,10 +1,12 @@
 package com.bumpkin.disk.file.controller;
 
 import cn.hutool.system.SystemUtil;
-import com.bumpkin.disk.file.sevice.FileService;
+import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.util.MyFileUtil;
 import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.result.ResponseResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,7 @@ import java.util.Map;
  * @Author: linzhiquan
  * @CreateTime: 2021/04/09 20:10
  */
+@Api(tags = "文件")
 @Slf4j
 @RestController
 @RequestMapping(value = "/file")
@@ -31,11 +34,12 @@ public class FileController {
     public String fileRootPath;
 
     @Autowired
-    public FileService fileService;
+    public DiskFileService diskFileService;
 
     /**
      * 文件重命名 文件夹重命名时 老名字写path 新名字写newName oldName填@dir@
      */
+    @ApiOperation(value = "文件重命名")
     @PostMapping(value = "/fileRename")
     public ResponseResult fileRename(String oldName, String newName, String path, HttpServletRequest request) {
         if (path == null) {
@@ -51,7 +55,7 @@ public class FileController {
         String saveFilePath = fileRootPath + userName + "/" + path;
         String oldNameWithPath = saveFilePath + "/" + oldName;
         File file = new File(oldNameWithPath);
-        if (fileService.userFileRename(oldName, newName, userName, path)) {
+        if (diskFileService.userFileRename(oldName, newName, userName, path)) {
             log.warn("重命名成功！");
             return ResponseResult.createSuccessResult("重命名成功！");
         } else if (!file.exists()) {
@@ -63,13 +67,7 @@ public class FileController {
         }
     }
 
-    /**
-     * 创建文件夹
-     * @param dirName
-     * @param path
-     * @param request
-     * @return
-     */
+    @ApiOperation(value = "创建文件夹")
     @PostMapping(value = "/dirCreate")
     public ResponseResult dirCreate(String dirName, String path, HttpServletRequest request) {
         if (path == null) {
@@ -88,7 +86,7 @@ public class FileController {
         }
 
         // 重命名文件
-        boolean b = fileService.userDirCreate(dirName, path);
+        boolean b = diskFileService.userDirCreate(dirName, path);
         if (b) {
             return ResponseResult.createSuccessResult("文件夹创建成功！");
         } else {
@@ -96,6 +94,7 @@ public class FileController {
         }
     }
 
+    @ApiOperation(value = "移动用户文件")
     @PostMapping(value = "fileMove")
     public ResponseResult fileMove(String fileName, String oldPath, String newPath, HttpServletRequest request) {
         if (fileName == null) {
@@ -107,7 +106,7 @@ public class FileController {
         //todo 获取用户名
         String userName = WebUtil.getUserNameByRequest(request);
         // 移动文件
-        boolean b = fileService.userFileDirMove(fileName, oldPath, newPath, userName);
+        boolean b = diskFileService.userFileDirMove(fileName, oldPath, newPath, userName);
         if (b) {
             return ResponseResult.createSuccessResult("移动成功！");
         } else {
@@ -115,6 +114,7 @@ public class FileController {
         }
     }
 
+    @ApiOperation(value = "获取用户可用网盘空间大小")
     @GetMapping(value = "/getUserSpaceSize")
     public ResponseResult getUserSpaceSize(HttpServletRequest request) {
         // 普通用户限制80G，guest用户限制40G，
@@ -135,5 +135,17 @@ public class FileController {
         spaceMap.put("freeSpace", freeSpace);
 
         return ResponseResult.createSuccessResult(spaceMap);
+    }
+
+    @ApiOperation(value = "获取用户所有文件目录")
+    @GetMapping(value = "/gerUserFileList")
+    public ResponseResult gerUserFileList() {
+        // todo 编写获取用户所有文件目录
+        return null;
+    }
+
+    public ResponseResult fileDelete(String fileName, String path, HttpServletRequest request) {
+
+        return null;
     }
 }

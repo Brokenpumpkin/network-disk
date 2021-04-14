@@ -1,4 +1,4 @@
-package com.bumpkin.disk.file.util;
+package com.bumpkin.disk.utils;
 
 import com.bumpkin.disk.entities.BaseEntity;
 

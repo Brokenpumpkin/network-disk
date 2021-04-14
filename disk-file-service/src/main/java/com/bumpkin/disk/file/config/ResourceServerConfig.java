@@ -37,7 +37,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .authorizeRequests()
 //                    .antMatchers("/product/**").access("#oauth2.hasScope('select') and hasRole('ROLE_USER')")
                 .antMatchers("/download/**").authenticated()
-                .antMatchers("/upload/**").authenticated()
+//                .antMatchers("/upload/**").authenticated()
                 .antMatchers("/file/**").authenticated()
                 .antMatchers("/share/**").authenticated();
         // @formatter:on

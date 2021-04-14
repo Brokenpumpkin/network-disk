@@ -1,7 +1,7 @@
 package com.bumpkin.disk.result;
 
 import com.bumpkin.disk.exceptions.BaseError;
-import io.swagger.annotations.ApiModelProperty;
+//import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
 
@@ -19,11 +19,11 @@ public class ResponseResult<T> implements Serializable {
     public static final String MESSAGE_SUCCESS = "请求成功";
 
 
-    @ApiModelProperty(value = "响应状态码")
+//    @ApiModelProperty(value = "响应状态码")
     private int code=STATE_OK;
-    @ApiModelProperty(value = "响应信息值")
+//    @ApiModelProperty(value = "响应信息值")
     private String message=MESSAGE_SUCCESS;
-    @ApiModelProperty(value = "响应数据体")
+//    @ApiModelProperty(value = "响应数据体")
     private T data;
 
     public int getCode() {
