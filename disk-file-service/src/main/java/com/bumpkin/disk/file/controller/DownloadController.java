@@ -1,9 +1,13 @@
 package com.bumpkin.disk.file.controller;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.util.FileSplitUtil;
 import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.result.ResponseResult;
+import com.bumpkin.disk.utils.RedisUtil;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
 
 /**
  * @Author: linzhiquan
@@ -34,6 +40,9 @@ public class DownloadController {
     @Autowired
     public DiskFileService diskFileService;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     @Value("${size}")
     public void setSize(int size) {
         DownloadController.size = size;
@@ -47,42 +56,42 @@ public class DownloadController {
      * @return 需要下载的文件在本地的路径
      */
     @GetMapping(value = "fileDownload")
-    public ResponseResult download(@RequestParam String fileName, String path, HttpServletRequest request) {
+    public void download(@RequestParam String fileName, String path,
+                                   HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException {
         if (path == null) {
             path = "/";
         }
-        if (fileName.isEmpty()) {
-            return ResponseResult.createErrorResult("文件名字为空！");
-        }
-        //todo 获取用户名
-        String userName = WebUtil.getUserNameByRequest(request);
-        //        String userName ="zc";
-        // 下载文件，获取下载路径,这个是 个映射的路径
-        String link = diskFileService.download(fileName, userName, path);
-        try {
-            //这里校验要填真实的路经
-            String newLink = link.replace("/data/", fileRootPath);
-            String[] md5Array = FileSplitUtil.splitBySizeSubSection(newLink, size,
-                    fileRootPath + "/tempMd5/" + userName + "/");
-//            result.setObj(md5Array);
-            if (!link.isEmpty()) {
-                return ResponseResult.createSuccessResult(md5Array,link);
-            } else {
-                log.warn("下载失败");
-                return ResponseResult.createErrorResult("");
-            }
-        } catch (Exception e) {
-            log.error("Exception:", e);
-            return ResponseResult.createErrorResult("");
-        }
+        //获取用户
+        String accessToken = StrUtil.subAfter(request.getHeader("Authorization"), " ", false);
+        log.info(accessToken);
+        String s = redisUtil.get(accessToken);
+        DiskUser diskUser = JSONUtil.toBean(JSONUtil.parseObj(s), DiskUser.class);
+        // 下载文件
+        diskFileService.download(fileName, diskUser, path, response);
+//        try {
+//            //这里校验要填真实的路经
+//            String newLink = link.replace("/data/", fileRootPath);
+//            String[] md5Array = FileSplitUtil.splitBySizeSubSection(newLink, size,
+//                    fileRootPath + "/tempMd5/" + userName + "/");
+////            result.setObj(md5Array);
+//            if (!link.isEmpty()) {
+//                return ResponseResult.createSuccessResult(md5Array,link);
+//            } else {
+//                log.warn("下载失败");
+//                return ResponseResult.createErrorResult("");
+//            }
+//        } catch (Exception e) {
+//            log.error("Exception:", e);
+//            return ResponseResult.createErrorResult("");
+//        }
 
     }
 
     @GetMapping(value = "/test")
     public String test(@RequestParam String fileName, String path, HttpServletRequest request) {
         String userName = WebUtil.getUserNameByRequest(request);
-        String link = diskFileService.download(fileName, userName, path);
+//        String link = diskFileService.download(fileName, userName, path);
 
-        return link;
+        return "null";
     }
 }

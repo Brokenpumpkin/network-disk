@@ -50,6 +50,11 @@ public class VirtualAddress extends BaseEntity {
      */
     private Integer isDir;
 
+    /**
+     * 是否为用户根目录 1是 0否
+     */
+    private Integer isParent;
+
     private Date createTime;
 
     private Date updateTime;

@@ -6,6 +6,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 
 /**
  * @Author: linzhiquan
@@ -17,9 +18,16 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 
     private static final String FILE_RESOURCE_ID = "file";
 
+    private static final String URL = "http://localhost:50002/oauth/check_token";
+
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) {
         resources.resourceId(FILE_RESOURCE_ID).stateless(true);
+        RemoteTokenServices tokenService = new RemoteTokenServices();
+        tokenService.setCheckTokenEndpointUrl(URL);
+        tokenService.setClientId("client_2");
+        tokenService.setClientSecret("123456");
+        resources.tokenServices(tokenService);
     }
 
     @Override
@@ -37,7 +45,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .authorizeRequests()
 //                    .antMatchers("/product/**").access("#oauth2.hasScope('select') and hasRole('ROLE_USER')")
                 .antMatchers("/download/**").authenticated()
-//                .antMatchers("/upload/**").authenticated()
+                .antMatchers("/upload/**").authenticated()
                 .antMatchers("/file/**").authenticated()
                 .antMatchers("/share/**").authenticated();
         // @formatter:on

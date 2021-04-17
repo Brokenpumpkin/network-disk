@@ -7,6 +7,8 @@ import com.bumpkin.disk.file.vo.DiskFileVo;
 import com.bumpkin.disk.result.ResponseResult;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 /**
@@ -27,21 +29,21 @@ public interface DiskFileService extends IService<DiskFile> {
     /**
      * 下载文件
      * @param fileName
-     * @param userName
-     * @param path
+     * @param diskUser
+     * @param path 文件所在虚拟路径
      * @return
      */
-    String download(String fileName, String userName, String path);
+    void download(String fileName, DiskUser diskUser, String path, HttpServletResponse response) throws FileNotFoundException;
 
     /**
      * 重命名文件
      * @param oldName
      * @param newName
-     * @param userName
+     * @param diskUser
      * @param path
      * @return
      */
-    Boolean userFileRename(String oldName, String newName, String userName, String path);
+    Boolean userFileRename(String oldName, String newName, DiskUser diskUser, String path);
 
     /**
      * 新建文件夹
@@ -49,17 +51,17 @@ public interface DiskFileService extends IService<DiskFile> {
      * @param path
      * @return
      */
-    Boolean userDirCreate(String dirName, String path);
+    Boolean userDirCreate(String dirName, String path, DiskUser diskUser);
 
     /**
      * 移动文件、文件夹
      * @param fileName
      * @param oldPath
      * @param newPath
-     * @param userName
+     * @param diskUser
      * @return
      */
-    Boolean userFileDirMove(String fileName, String oldPath, String newPath, String userName);
+    Boolean userFileDirMove(String fileName, String oldPath, String newPath, DiskUser diskUser);
 
     /**
      * 文件提取码-生成
@@ -74,7 +76,7 @@ public interface DiskFileService extends IService<DiskFile> {
      * @param path
      * @return
      */
-    List<DiskFileVo> userFileList(String userName, String path);
+    List<DiskFileVo> userFileList(DiskUser diskUser, String path);
 
     /**
      * 搜索文件

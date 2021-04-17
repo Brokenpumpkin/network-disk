@@ -47,10 +47,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         // @formatter:off
         http
-                .requestMatchers().anyRequest()
-                .and()
-                .authorizeRequests()
-                .antMatchers("/oauth/*").permitAll();
+            .requestMatchers().anyRequest()
+            .and()
+            .authorizeRequests()
+            .antMatchers("/oauth/*").permitAll();
         // @formatter:on
     }
 }

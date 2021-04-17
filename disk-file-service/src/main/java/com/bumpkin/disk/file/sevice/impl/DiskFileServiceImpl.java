@@ -8,23 +8,26 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.dao.DiskFileMapper;
 import com.bumpkin.disk.file.entity.DiskFile;
+import com.bumpkin.disk.file.entity.VirtualAddress;
 import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.sevice.VirtualAddressService;
 import com.bumpkin.disk.file.util.MD5Util;
 import com.bumpkin.disk.file.util.MultipartFileUtil;
-import com.bumpkin.disk.file.util.MyFileUtil;
-import com.bumpkin.disk.file.util.StringUtil;
 import com.bumpkin.disk.file.vo.DiskFileVo;
 import com.bumpkin.disk.result.ResponseResult;
+import com.bumpkin.disk.utils.EntityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -61,13 +64,13 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
         String saveFilePath = fileRootPath;
         log.warn("1 saveFilePath:" + saveFilePath);
         try {
-            File newfile = MultipartFileUtil.multipartFileToFile(file);
+            File tempFile = MultipartFileUtil.multipartFileToFile(file);
             String saveFileName = file.getOriginalFilename();
-            String md5ToStr = MD5Util.getFileMD5ToString(newfile);
+            String md5ToStr = MD5Util.getFileMD5ToString(tempFile);
             DiskFile diskFile = checkMd5Exist(md5ToStr);
 
             if (diskFile != null) {
-                virtualAddressService.add(diskFile, userId, path);
+                virtualAddressService.addFile(diskFile, userId, path);
                 return ResponseResult.createSuccessResult("上传成功！");
             }
             assert saveFileName != null;
@@ -78,13 +81,15 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
             newFile.setId(fileUuid);
             newFile.setFileId(fileUuid);
             newFile.setFileLocalLocation(saveFilePath);
-            newFile.setFileSize((int) FileUtil.size(newfile));
+            newFile.setFileSize((int) FileUtil.size(tempFile));
             newFile.setFileMd5(md5ToStr);
-            newFile.setFileType(StrUtil.subBefore(saveFileName, ".", false));
+            newFile.setFileType(StrUtil.subAfter(saveFileName, ".", false));
             newFile.setOriginalName(saveFileName);
+            newFile.setCreateTime(EntityUtil.getNewEntity().getCreateTime());
             this.baseMapper.insert(newFile);
+            virtualAddressService.addFile(newFile, userId, path);
 
-            MultipartFileUtil.delteTempFile(newfile);
+            MultipartFileUtil.delteTempFile(tempFile);
             return ResponseResult.createSuccessResult("上传成功！");
         } catch (Exception e) {
             e.printStackTrace();
@@ -93,63 +98,89 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
     }
 
     @Override
-    public String download(String fileName, String userName, String path) {
-        // 服务器下载的文件所在的本地路径的文件夹
-        String saveFilePath = fileRootPath + userName + "/" + path;
-        log.warn("1 saveFilePath:" + saveFilePath);
-        // 判断文件夹是否存在-建立文件夹
-        java.io.File filePathDir = new java.io.File(saveFilePath);
-        if (!filePathDir.exists()) {
-            filePathDir.mkdir();
+    public void download(String fileName, DiskUser diskUser, String path, HttpServletResponse response) {
+//        if (fileName.isEmpty()) {
+//            return ResponseResult.createErrorResult("文件名字为空！");
+//        }
+        //todo 未测试
+        VirtualAddress virtualAddress = virtualAddressService.getDiskFileByFileNameAndParentPathAndUserId(fileName, path, diskUser.getUserId());
+        if (virtualAddress != null) {
+            String fileId = virtualAddress.getFileId();
+            DiskFile diskFile = this.baseMapper.selectById(fileId);
+            String fileLocalLocation = diskFile.getFileLocalLocation();
+            File file = new File(fileLocalLocation);
+            BufferedInputStream bis = null;
+            try (InputStream inputStream = new FileInputStream(file)) {
+                response.setContentType("application/octet-stream");
+                response.setHeader("Content-Disposition", "attachment;filename=" + new String(fileName.getBytes(), "ISO-8859-1"));
+                byte[] buff = new byte[1024];
+                OutputStream os;
+                os = response.getOutputStream();
+                bis = new BufferedInputStream(inputStream);
+                int i = bis.read(buff);
+                while (i != -1) {
+                    os.write(buff, 0, buff.length);
+                    os.flush();
+                    i = bis.read(buff);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }finally {
+                if (bis != null) {
+                    try {
+                        bis.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
-        // 本地路径
-        saveFilePath = saveFilePath + "/" + fileName;
-        String link = saveFilePath.replace(fileRootPath, "/data/");
-        link = StringUtil.stringSlashToOne(link);
-        log.warn("返回的路径：" + link);
-        return link;
     }
 
     @Override
-    public Boolean userFileRename(String oldName, String newName, String userName, String path) {
-        // 重命名-本地磁盘文件
-        String oldNameWithPath;
-        String newNameWithPath;
-        if ("@dir@".equals(oldName)) {
-            oldNameWithPath = StringUtil.stringSlashToOne(fileRootPath + userName + "/" + path);
-            newNameWithPath =
-                    oldNameWithPath.substring(0, (int) StringUtil.getfilesuffix(oldNameWithPath, true, "/")) + "/" + newName;
-            newNameWithPath = StringUtil.stringSlashToOne(newNameWithPath);
-        } else {
-            oldNameWithPath = StringUtil.stringSlashToOne(fileRootPath + userName + "/" + path + "/" + oldName);
-            newNameWithPath = StringUtil.stringSlashToOne(fileRootPath + userName + "/" + path + "/" + newName);
+    public Boolean userFileRename(String oldName, String newName, DiskUser diskUser, String path) {
+        VirtualAddress virtualAddress = virtualAddressService.getDiskFileByFileNameAndParentPathAndUserId(oldName, path, diskUser.getUserId());
+        if (virtualAddress != null) {
+            String fileId = virtualAddress.getFileId();
+            DiskFile diskFile = this.baseMapper.selectById(fileId);
+            diskFile.setOriginalName(newName);
+            return true;
         }
-        return MyFileUtil.renameFile(oldNameWithPath, newNameWithPath);
+        return false;
     }
 
     @Override
-    public Boolean userDirCreate(String dirName, String path) {
-        java.io.File file = new java.io.File(path + "/" + dirName);
-        return file.mkdir();
+    public Boolean userDirCreate(String dirName, String path, DiskUser diskUser) {
+        return virtualAddressService.addDir(diskUser.getUserId(), path, diskUser);
     }
 
     @Override
-    public Boolean userFileDirMove(String fileName, String oldPath, String newPath, String userName) {
-        return null;
+    public Boolean userFileDirMove(String fileName, String oldPath, String newPath, DiskUser diskUser) {
+        return virtualAddressService.fileDirVirtualAddressMove(fileName, oldPath, newPath, diskUser);
     }
 
     @Override
     public String fileShareCodeEncode(String filePathAndName) {
+
         return null;
     }
 
     @Override
-    public List<DiskFileVo> userFileList(String userName, String path) {
-        return null;
+    public List<DiskFileVo> userFileList(DiskUser diskUser, String path) {
+
+        List<VirtualAddress> virtualAddresses = virtualAddressService.getFileByUserAndParentPath(diskUser, path);
+        List<DiskFileVo> diskFileVoList = new ArrayList<>();
+        for (VirtualAddress v : virtualAddresses) {
+            DiskFileVo diskFileVo = new DiskFileVo();
+            BeanUtils.copyProperties(v,diskFileVo);
+            diskFileVoList.add(diskFileVo);
+        }
+        return diskFileVoList;
     }
 
     @Override
     public List<DiskFileVo> search(String key, String userName, String path) {
+
         return null;
     }
 

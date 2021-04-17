@@ -1,19 +1,20 @@
 package com.bumpkin.disk.file.controller;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import cn.hutool.system.SystemUtil;
+import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.util.MyFileUtil;
 import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.result.ResponseResult;
+import com.bumpkin.disk.utils.RedisUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -36,6 +37,9 @@ public class FileController {
     @Autowired
     public DiskFileService diskFileService;
 
+    @Autowired
+    private WebUtil webUtil;
+
     /**
      * 文件重命名 文件夹重命名时 老名字写path 新名字写newName oldName填@dir@
      */
@@ -48,23 +52,15 @@ public class FileController {
         if (oldName.isEmpty() || newName.isEmpty()) {
             return ResponseResult.createErrorResult("文件名字为空！");
         }
-        //todo 获取用户名
-        String userName = WebUtil.getUserNameByRequest(request);
-        // 重命名文件
-//        boolean b = fileService.userFileRename(oldName, newName, userName, path);
-        String saveFilePath = fileRootPath + userName + "/" + path;
-        String oldNameWithPath = saveFilePath + "/" + oldName;
-        File file = new File(oldNameWithPath);
-        if (diskFileService.userFileRename(oldName, newName, userName, path)) {
+        //获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
+
+        if (diskFileService.userFileRename(oldName, newName, diskUser, path)) {
             log.warn("重命名成功！");
             return ResponseResult.createSuccessResult("重命名成功！");
-        } else if (!file.exists()) {
-            log.warn("没有重命名的权限！");
-            return ResponseResult.createErrorResult("没有重命名的权限！");
-        } else {
-            log.warn("重命名失败！");
-            return ResponseResult.createErrorResult("重命名失败！");
         }
+        return ResponseResult.createErrorResult("重命名失败！");
+
     }
 
     @ApiOperation(value = "创建文件夹")
@@ -76,17 +72,11 @@ public class FileController {
         if (dirName.isEmpty() || path.isEmpty()) {
             return ResponseResult.createErrorResult("文件夹名字为空！");
         }
-        //todo 获取用户名
-        String userName = WebUtil.getUserNameByRequest(request);
-        // path = /pan/userName/当前path
-        if (!SystemUtil.getOsInfo().isWindows()) {
-            path = "/pan/" + userName + path;
-        } else {
-            path = fileRootPath + userName + path;
-        }
+        //获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
 
-        // 重命名文件
-        boolean b = diskFileService.userDirCreate(dirName, path);
+        // 创建文件夹
+        boolean b = diskFileService.userDirCreate(dirName, path, diskUser);
         if (b) {
             return ResponseResult.createSuccessResult("文件夹创建成功！");
         } else {
@@ -103,11 +93,10 @@ public class FileController {
         if (oldPath.isEmpty() || newPath.isEmpty()) {
             return ResponseResult.createErrorResult("路径名字为空！");
         }
-        //todo 获取用户名
-        String userName = WebUtil.getUserNameByRequest(request);
+        // 获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
         // 移动文件
-        boolean b = diskFileService.userFileDirMove(fileName, oldPath, newPath, userName);
-        if (b) {
+        if (diskFileService.userFileDirMove(fileName, oldPath, newPath, diskUser)) {
             return ResponseResult.createSuccessResult("移动成功！");
         } else {
             return ResponseResult.createErrorResult("移动失败！");
@@ -144,8 +133,14 @@ public class FileController {
         return null;
     }
 
+    @DeleteMapping(value = "/fileDelete")
     public ResponseResult fileDelete(String fileName, String path, HttpServletRequest request) {
 
+        return null;
+    }
+
+    @GetMapping(value = "/search")
+    public ResponseResult search() {
         return null;
     }
 }
