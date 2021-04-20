@@ -36,10 +36,14 @@ public class VirtualAddress extends BaseEntity {
     private String fileName;
 
     /**
-     * 父级路径
+     * 上一级父级路径
      */
     private String parentPath;
 
+    /**
+     * 全父级路径
+     */
+    private String fullParentPath;
     /**
      * 文件大小
      */
@@ -53,7 +57,7 @@ public class VirtualAddress extends BaseEntity {
     /**
      * 是否为用户根目录 1是 0否
      */
-    private Integer isParent;
+    private Integer isRoot;
 
     private Date createTime;
 

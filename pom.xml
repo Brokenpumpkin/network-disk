@@ -21,6 +21,7 @@
         <module>disk-commom</module>
         <module>disk-file-service</module>
         <module>disk-auth</module>
+        <module>disk-gateway</module>
     </modules>
 
     <properties>

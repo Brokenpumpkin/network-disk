@@ -7,6 +7,7 @@ import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.util.MyFileUtil;
 import com.bumpkin.disk.file.util.WebUtil;
+import com.bumpkin.disk.file.vo.DiskFileVo;
 import com.bumpkin.disk.result.ResponseResult;
 import com.bumpkin.disk.utils.RedisUtil;
 import io.swagger.annotations.Api;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -126,11 +128,13 @@ public class FileController {
         return ResponseResult.createSuccessResult(spaceMap);
     }
 
-    @ApiOperation(value = "获取用户所有文件目录")
+    @ApiOperation(value = "获取用户当前路径下文件目录")
     @GetMapping(value = "/gerUserFileList")
-    public ResponseResult gerUserFileList() {
-        // todo 编写获取用户所有文件目录
-        return null;
+    public ResponseResult gerUserFileList(String path, HttpServletRequest request) {
+        //获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
+        List<DiskFileVo> diskFileVoList = diskFileService.userFileList(diskUser, path);
+        return ResponseResult.createSuccessResult(diskFileVoList, "获取用户文件目录成功！");
     }
 
     @DeleteMapping(value = "/fileDelete")

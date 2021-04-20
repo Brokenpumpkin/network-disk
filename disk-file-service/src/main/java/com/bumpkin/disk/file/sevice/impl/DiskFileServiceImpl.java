@@ -11,6 +11,7 @@ import com.bumpkin.disk.file.entity.DiskFile;
 import com.bumpkin.disk.file.entity.VirtualAddress;
 import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.sevice.VirtualAddressService;
+import com.bumpkin.disk.file.util.FileSizeUtil;
 import com.bumpkin.disk.file.util.MD5Util;
 import com.bumpkin.disk.file.util.MultipartFileUtil;
 import com.bumpkin.disk.file.vo.DiskFileVo;
@@ -173,6 +174,7 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
         for (VirtualAddress v : virtualAddresses) {
             DiskFileVo diskFileVo = new DiskFileVo();
             BeanUtils.copyProperties(v,diskFileVo);
+            diskFileVo.setFileSize(FileSizeUtil.getNetFileSizeDescription(v.getFileSize()));
             diskFileVoList.add(diskFileVo);
         }
         return diskFileVoList;

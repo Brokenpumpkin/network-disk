@@ -18,7 +18,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 
     private static final String FILE_RESOURCE_ID = "file";
 
-    private static final String URL = "http://localhost:50002/oauth/check_token";
+    private static final String URL = "http://localhost:51000/oauth/check_token";
 
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) {

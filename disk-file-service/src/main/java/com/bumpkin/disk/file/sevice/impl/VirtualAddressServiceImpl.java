@@ -34,9 +34,10 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         virtualAddress.setFileName(diskFile.getOriginalName());
         virtualAddress.setFileSize(diskFile.getFileSize());
         virtualAddress.setIsDir(0);
-        virtualAddress.setIsParent(0);
-        // todo 父级路径只写上一级文件夹
-        virtualAddress.setParentPath(parentPath);
+        virtualAddress.setIsRoot(0);
+        //父级路径只写上一级文件夹
+        virtualAddress.setParentPath("/" + StrUtil.subBefore(parentPath, "/", true));
+        virtualAddress.setFullParentPath(parentPath);
         BaseEntity newEntity = EntityUtil.getNewEntity();
         virtualAddress.setCreateTime(newEntity.getCreateTime());
         virtualAddress.setUpdateTime(newEntity.getUpdateTime());
@@ -55,9 +56,10 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         virtualAddress.setFileName(dirName);
         virtualAddress.setFileSize(0);
         virtualAddress.setIsDir(1);
-        virtualAddress.setIsParent(0);
-        // todo 父级路径只写上一级文件夹
-        virtualAddress.setParentPath(parentPath);
+        virtualAddress.setIsRoot(0);
+        //父级路径只写上一级文件夹
+        virtualAddress.setParentPath("/" + StrUtil.subBefore(parentPath, "/", true));
+        virtualAddress.setFullParentPath(parentPath);
         BaseEntity newEntity = EntityUtil.getNewEntity();
         virtualAddress.setCreateTime(newEntity.getCreateTime());
         virtualAddress.setUpdateTime(newEntity.getUpdateTime());
@@ -66,21 +68,20 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
 
     @Override
     public Boolean fileDirVirtualAddressMove(String fileName, String oldPath, String newPath, DiskUser diskUser) {
-        String oldParentPath = StrUtil.subBefore(oldPath, "/", true);
-        String newParentPath = StrUtil.subBefore(newPath, "/", true);
-        VirtualAddress virtualAddressFile = this.getDiskFileByFileNameAndParentPathAndUserId(fileName, oldParentPath, diskUser.getUserId());
+        VirtualAddress virtualAddressFile = this.getDiskFileByFileNameAndParentPathAndUserId(fileName, oldPath, diskUser.getUserId());
         if (virtualAddressFile != null) {
-            virtualAddressFile.setParentPath(newParentPath);
+            virtualAddressFile.setParentPath(StrUtil.subBefore(newPath, "/", true));
+            virtualAddressFile.setFullParentPath(newPath);
             return true;
         }
         return false;
     }
 
     @Override
-    public List<VirtualAddress> getFileByUserAndParentPath(DiskUser diskUser, String parentPath) {
+    public List<VirtualAddress> getFileByUserAndParentPath(DiskUser diskUser, String fullParentPath) {
         QueryWrapper<VirtualAddress> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", diskUser.getUserId());
-        queryWrapper.eq("parent_path", parentPath);
+        queryWrapper.eq("full_parent_path", fullParentPath);
         return this.baseMapper.selectList(queryWrapper);
     }
 
@@ -89,7 +90,7 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         QueryWrapper<VirtualAddress> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId);
         queryWrapper.eq("file_name", fileName);
-        queryWrapper.eq("parent_path", parentPath);
+        queryWrapper.eq("full_parent_path", parentPath);
         return this.baseMapper.selectOne(queryWrapper);
     }
 }

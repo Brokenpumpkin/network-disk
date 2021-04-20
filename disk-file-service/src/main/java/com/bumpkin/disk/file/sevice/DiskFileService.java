@@ -72,7 +72,7 @@ public interface DiskFileService extends IService<DiskFile> {
 
     /**
      * 列出用户文件
-     * @param userName
+     * @param diskUser
      * @param path
      * @return
      */

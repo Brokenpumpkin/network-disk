@@ -57,7 +57,7 @@ public class DiskUserController {
             return ResponseResult.createErrorResult(result.getFieldError().getDefaultMessage());
         }
         String username = userLoginDto.getUsername();
-        String phoneNum = userLoginDto.getPhoneNum();
+//        String phoneNum = userLoginDto.getPhoneNum();
         String password = userLoginDto.getPassword();
         DiskUser diskUser = diskUserService.getUserByUsername(username);
         if (diskUser == null) {

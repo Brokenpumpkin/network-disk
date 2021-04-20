@@ -46,7 +46,7 @@ mybatis-plus:
 security:
   oauth2:
     resource:
-      token-info-uri: http://127.0.0.1:50002 #单机环境使用固定IP地址
+      token-info-uri: http://127.0.0.1:51000 #单机环境使用固定IP地址
       loadBalanced: true   #使用注册中心时候开启负载均衡
       #token-info-uri: http://cloud-auth/oauth/check_token #使用注册中心时候根据服务名请求
     client:

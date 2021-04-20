@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 public class WebUtil {
 
     @Autowired
-    private static RedisUtil redisUtil;
+    private RedisUtil redisUtil;
 
     public static String getUserNameByRequest(HttpServletRequest request) {
         DiskUser diskUser = (DiskUser) request.getSession().getAttribute("user");
