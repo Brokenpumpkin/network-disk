@@ -28,6 +28,11 @@ spring:
         max-wait: -1
         max-idle: 8
         min-idle: 0
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 up:
   swagger:

@@ -1,4 +1,4 @@
-package com.bumpkin.disk.file.entity;
+package com.bumpkin.disk.user.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.bumpkin.disk.entities.BaseEntity;

@@ -7,6 +7,7 @@ import com.bumpkin.disk.result.ResponseResult;
 import com.bumpkin.disk.user.dto.DiskUserLoginDto;
 import com.bumpkin.disk.user.dto.DiskUserRegisterDto;
 import com.bumpkin.disk.user.service.DiskUserService;
+import com.bumpkin.disk.user.service.VirtualAddressService;
 import com.bumpkin.disk.utils.RedisUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.validation.BindingResult;
@@ -78,13 +80,13 @@ public class DiskUserController {
         return ResponseResult.createSuccessResult(tokenJson, "登录成功！");
     }
 
+    @Transactional
     @ApiOperation(value = "注册")
     @PostMapping(value = "/register")
-    public ResponseResult register(@RequestBody @Valid DiskUserRegisterDto userRegisterDto, BindingResult result) {
+    public ResponseResult register(@RequestBody @Valid DiskUserRegisterDto userRegisterDto, BindingResult result) throws Exception {
         if (result.hasErrors()) {
             return ResponseResult.createErrorResult(result.getFieldError().getDefaultMessage());
         }
-        //todo 虚拟地址表加用户根目录
         return diskUserService.add(userRegisterDto);
     }
 

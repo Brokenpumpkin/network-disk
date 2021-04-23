@@ -13,7 +13,7 @@ public class DiskFileVo {
     /**
      * 文件名
      */
-    private String fileName;
+    private String userFileName;
 
     private Integer isDir;
 

@@ -17,6 +17,7 @@ import com.bumpkin.disk.file.util.MultipartFileUtil;
 import com.bumpkin.disk.file.vo.DiskFileVo;
 import com.bumpkin.disk.result.ResponseResult;
 import com.bumpkin.disk.utils.EntityUtil;
+import com.bumpkin.disk.utils.FileEncAndDecUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.BeanUtils;
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,19 +56,18 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
     @Transactional
     @Override
     public ResponseResult upload(MultipartFile file, DiskUser diskUser, String path) {
-        String userName = "null";
         String userId = "0";
         if (diskUser != null) {
-            userName = diskUser.getUsername();
             userId = diskUser.getUserId();
         }
-        // 文件虚拟地址路径
-//        String saveFilePath = fileRootPath + userName + "/" + path;
+        // 文件真实存储地址路径
         String saveFilePath = fileRootPath;
         log.warn("1 saveFilePath:" + saveFilePath);
         try {
+            String fileUuid = IdUtil.fastSimpleUUID();
             File tempFile = MultipartFileUtil.multipartFileToFile(file);
-            String saveFileName = file.getOriginalFilename();
+            String originalFilename = file.getOriginalFilename();
+            String saveFileName = fileUuid + "." + StrUtil.subAfter(originalFilename, ".", false);
             String md5ToStr = MD5Util.getFileMD5ToString(tempFile);
             DiskFile diskFile = checkMd5Exist(md5ToStr);
 
@@ -74,18 +75,24 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
                 virtualAddressService.addFile(diskFile, userId, path);
                 return ResponseResult.createSuccessResult("上传成功！");
             }
-            assert saveFileName != null;
-            FileUtils.copyInputStreamToFile(file.getInputStream(), new File(saveFilePath, saveFileName));
+            assert originalFilename != null;
+            File encodeFile = new File(saveFilePath, saveFileName);
+            FileUtils.copyInputStreamToFile(file.getInputStream(), encodeFile);
+
+            //文件加密
+//            assert diskUser != null;
+//            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
+//            FileEncAndDecUtil.encFile(tempFile, encodeFile, key, diskUser.getSalt());
 
             DiskFile newFile = new DiskFile();
-            String fileUuid = IdUtil.simpleUUID();
             newFile.setId(fileUuid);
             newFile.setFileId(fileUuid);
             newFile.setFileLocalLocation(saveFilePath);
             newFile.setFileSize((int) FileUtil.size(tempFile));
             newFile.setFileMd5(md5ToStr);
-            newFile.setFileType(StrUtil.subAfter(saveFileName, ".", false));
-            newFile.setOriginalName(saveFileName);
+            newFile.setFileType(StrUtil.subAfter(originalFilename, ".", false));
+            newFile.setOriginalName(originalFilename);
+            newFile.setSaveFileName(saveFileName);
             newFile.setCreateTime(EntityUtil.getNewEntity().getCreateTime());
             this.baseMapper.insert(newFile);
             virtualAddressService.addFile(newFile, userId, path);
@@ -152,7 +159,7 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
 
     @Override
     public Boolean userDirCreate(String dirName, String path, DiskUser diskUser) {
-        return virtualAddressService.addDir(diskUser.getUserId(), path, diskUser);
+        return virtualAddressService.addDir(dirName, path, diskUser);
     }
 
     @Override

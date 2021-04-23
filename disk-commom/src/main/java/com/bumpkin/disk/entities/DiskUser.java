@@ -25,4 +25,6 @@ public class DiskUser {
     private String phone;
 
     private String alias;
+
+    private byte[] salt;
 }

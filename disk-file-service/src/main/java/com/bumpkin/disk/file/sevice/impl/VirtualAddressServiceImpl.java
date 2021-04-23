@@ -31,12 +31,12 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         virtualAddress.setUuid(virtualAddressUuid);
         virtualAddress.setFileId(diskFile.getFileId());
         virtualAddress.setUserId(userId);
-        virtualAddress.setFileName(diskFile.getOriginalName());
+        virtualAddress.setUserFileName(diskFile.getOriginalName());
         virtualAddress.setFileSize(diskFile.getFileSize());
         virtualAddress.setIsDir(0);
         virtualAddress.setIsRoot(0);
         //父级路径只写上一级文件夹
-        virtualAddress.setParentPath("/" + StrUtil.subBefore(parentPath, "/", true));
+        virtualAddress.setParentPath("/" + StrUtil.subAfter(parentPath, "/", true));
         virtualAddress.setFullParentPath(parentPath);
         BaseEntity newEntity = EntityUtil.getNewEntity();
         virtualAddress.setCreateTime(newEntity.getCreateTime());
@@ -53,12 +53,12 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         String dirId = IdUtil.simpleUUID();
         virtualAddress.setFileId(dirId);
         virtualAddress.setUserId(diskUser.getUserId());
-        virtualAddress.setFileName(dirName);
+        virtualAddress.setUserFileName(dirName);
         virtualAddress.setFileSize(0);
         virtualAddress.setIsDir(1);
         virtualAddress.setIsRoot(0);
         //父级路径只写上一级文件夹
-        virtualAddress.setParentPath("/" + StrUtil.subBefore(parentPath, "/", true));
+        virtualAddress.setParentPath("/" + StrUtil.subAfter(parentPath, "/", true));
         virtualAddress.setFullParentPath(parentPath);
         BaseEntity newEntity = EntityUtil.getNewEntity();
         virtualAddress.setCreateTime(newEntity.getCreateTime());

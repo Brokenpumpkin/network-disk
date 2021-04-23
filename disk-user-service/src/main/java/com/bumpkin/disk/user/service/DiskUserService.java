@@ -13,5 +13,5 @@ public interface DiskUserService extends IService<DiskUser> {
 
     DiskUser getUserByPhone(String phoneNum);
     DiskUser getUserByUsername(String username);
-    ResponseResult add(DiskUserRegisterDto userRegisterDto);
+    ResponseResult add(DiskUserRegisterDto userRegisterDto) throws Exception;
 }

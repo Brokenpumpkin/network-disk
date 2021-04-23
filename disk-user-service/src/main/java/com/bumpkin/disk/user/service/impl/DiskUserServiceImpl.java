@@ -8,6 +8,8 @@ import com.bumpkin.disk.user.dao.DiskUserMapper;
 import com.bumpkin.disk.user.dto.DiskUserRegisterDto;
 import com.bumpkin.disk.user.service.DiskUserService;
 import com.bumpkin.disk.entities.DiskUser;
+import com.bumpkin.disk.user.service.VirtualAddressService;
+import com.bumpkin.disk.utils.FileEncAndDecUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,9 @@ public class DiskUserServiceImpl extends ServiceImpl<DiskUserMapper, DiskUser> i
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private VirtualAddressService virtualAddressService;
 
     @Override
     public DiskUser getUserByPhone(String phoneNum) {
@@ -37,7 +42,7 @@ public class DiskUserServiceImpl extends ServiceImpl<DiskUserMapper, DiskUser> i
     }
 
     @Override
-    public ResponseResult add(DiskUserRegisterDto userRegisterDto) {
+    public ResponseResult add(DiskUserRegisterDto userRegisterDto) throws Exception {
         if (this.getUserByUsername(userRegisterDto.getUsername()) != null) {
             return ResponseResult.createErrorResult("用户名已存在！");
         }
@@ -54,7 +59,10 @@ public class DiskUserServiceImpl extends ServiceImpl<DiskUserMapper, DiskUser> i
         diskUser.setLevel(userRegisterDto.getLevel());
         diskUser.setPassword(passwordEncoder.encode(userRegisterDto.getPassword()));
         diskUser.setPhone(userRegisterDto.getPhone());
+        diskUser.setSalt(FileEncAndDecUtil.initSalt());
         this.baseMapper.insert(diskUser);
+        // 虚拟地址表加用户根目录
+        virtualAddressService.addUserRootDir(diskUser);
         return ResponseResult.createSuccessResult("操作成功！");
     }
 }

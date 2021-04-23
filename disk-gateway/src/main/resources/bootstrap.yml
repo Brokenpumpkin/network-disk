@@ -6,6 +6,11 @@ spring:
     name: mogu-gateway
   main:
     allow-bean-definition-overriding: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
   cloud:
     nacos:
       discovery:

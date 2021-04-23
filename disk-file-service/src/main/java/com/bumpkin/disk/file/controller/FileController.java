@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.system.SystemUtil;
 import com.bumpkin.disk.entities.DiskUser;
+import com.bumpkin.disk.file.dto.DirCreateDto;
 import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.util.MyFileUtil;
 import com.bumpkin.disk.file.util.WebUtil;
@@ -15,9 +16,11 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -67,18 +70,21 @@ public class FileController {
 
     @ApiOperation(value = "创建文件夹")
     @PostMapping(value = "/dirCreate")
-    public ResponseResult dirCreate(String dirName, String path, HttpServletRequest request) {
-        if (path == null) {
-            path = "/";
+    public ResponseResult dirCreate(@RequestBody @Valid DirCreateDto dirCreateDto, HttpServletRequest request, BindingResult results) {
+        if (results.hasErrors()) {
+            return  ResponseResult.createErrorResult(results.getFieldError().getDefaultMessage());
         }
-        if (dirName.isEmpty() || path.isEmpty()) {
+        if (dirCreateDto.getPath() == null) {
+            dirCreateDto.setPath("/");
+        }
+        if (dirCreateDto.getDirName().isEmpty() || dirCreateDto.getPath().isEmpty()) {
             return ResponseResult.createErrorResult("文件夹名字为空！");
         }
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
 
         // 创建文件夹
-        boolean b = diskFileService.userDirCreate(dirName, path, diskUser);
+        boolean b = diskFileService.userDirCreate(dirCreateDto.getDirName(), dirCreateDto.getPath(), diskUser);
         if (b) {
             return ResponseResult.createSuccessResult("文件夹创建成功！");
         } else {
@@ -139,12 +145,17 @@ public class FileController {
 
     @DeleteMapping(value = "/fileDelete")
     public ResponseResult fileDelete(String fileName, String path, HttpServletRequest request) {
-
+        //获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
+        //todo
         return null;
     }
 
     @GetMapping(value = "/search")
-    public ResponseResult search() {
+    public ResponseResult search(String keyword, HttpServletRequest request) {
+        //获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
+        //todo
         return null;
     }
 }

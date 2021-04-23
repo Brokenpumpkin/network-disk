@@ -29,7 +29,8 @@ public class UploadController {
     private WebUtil webUtil;
 
     @PostMapping(value = "/fileUpload")
-    public ResponseResult upload(@RequestParam MultipartFile file, String path, HttpServletRequest request) {
+    public ResponseResult upload(@RequestParam(name = "file") MultipartFile file
+            ,@RequestParam("path") String path, HttpServletRequest request) {
         if (path == null) {
             path = "/";
         }

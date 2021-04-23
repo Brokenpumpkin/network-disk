@@ -28,6 +28,8 @@ public class DiskFile {
      */
     private String originalName;
 
+    private String saveFileName;
+
     /**
      * 文件大小 bytes长度
      */
