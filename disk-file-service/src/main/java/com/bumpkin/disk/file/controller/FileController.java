@@ -5,7 +5,10 @@ import cn.hutool.json.JSONUtil;
 import cn.hutool.system.SystemUtil;
 import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.dto.DirCreateDto;
+import com.bumpkin.disk.file.dto.FileMoveDto;
+import com.bumpkin.disk.file.dto.FileRenameDto;
 import com.bumpkin.disk.file.sevice.DiskFileService;
+import com.bumpkin.disk.file.sevice.VirtualAddressService;
 import com.bumpkin.disk.file.util.MyFileUtil;
 import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.file.vo.DiskFileVo;
@@ -43,6 +46,9 @@ public class FileController {
     public DiskFileService diskFileService;
 
     @Autowired
+    public VirtualAddressService virtualAddressService;
+
+    @Autowired
     private WebUtil webUtil;
 
     /**
@@ -50,17 +56,17 @@ public class FileController {
      */
     @ApiOperation(value = "文件重命名")
     @PostMapping(value = "/fileRename")
-    public ResponseResult fileRename(String oldName, String newName, String path, HttpServletRequest request) {
-        if (path == null) {
-            path = "/";
+    public ResponseResult fileRename(@RequestBody FileRenameDto fileRenameDto, HttpServletRequest request) {
+        if (fileRenameDto.getPath() == null) {
+            fileRenameDto.setPath("/");
         }
-        if (oldName.isEmpty() || newName.isEmpty()) {
+        if (fileRenameDto.getOldName().isEmpty() || fileRenameDto.getNewName().isEmpty()) {
             return ResponseResult.createErrorResult("文件名字为空！");
         }
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
 
-        if (diskFileService.userFileRename(oldName, newName, diskUser, path)) {
+        if (diskFileService.userFileRename(fileRenameDto.getOldName(), fileRenameDto.getNewName(), diskUser, fileRenameDto.getPath())) {
             log.warn("重命名成功！");
             return ResponseResult.createSuccessResult("重命名成功！");
         }
@@ -94,17 +100,20 @@ public class FileController {
 
     @ApiOperation(value = "移动用户文件")
     @PostMapping(value = "fileMove")
-    public ResponseResult fileMove(String fileName, String oldPath, String newPath, HttpServletRequest request) {
-        if (fileName == null) {
-            fileName = "@dir@";
+    public ResponseResult fileMove(@RequestBody @Valid FileMoveDto fileMoveDto, HttpServletRequest request, BindingResult results) {
+        if (results.hasErrors()) {
+            return  ResponseResult.createErrorResult(results.getFieldError().getDefaultMessage());
         }
-        if (oldPath.isEmpty() || newPath.isEmpty()) {
+        if (fileMoveDto.getFileName() == null) {
+            fileMoveDto.setFileName("@dir@");
+        }
+        if (fileMoveDto.getOldPath().isEmpty() || fileMoveDto.getNewPath().isEmpty()) {
             return ResponseResult.createErrorResult("路径名字为空！");
         }
         // 获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
         // 移动文件
-        if (diskFileService.userFileDirMove(fileName, oldPath, newPath, diskUser)) {
+        if (diskFileService.userFileDirMove(fileMoveDto.getFileName(), fileMoveDto.getOldPath(), fileMoveDto.getNewPath(), diskUser)) {
             return ResponseResult.createSuccessResult("移动成功！");
         } else {
             return ResponseResult.createErrorResult("移动失败！");
@@ -143,19 +152,27 @@ public class FileController {
         return ResponseResult.createSuccessResult(diskFileVoList, "获取用户文件目录成功！");
     }
 
+    @ApiOperation(value = "获取用户目录树形结构")
+    @GetMapping(value = "/getUserFileListByRoot")
+    public ResponseResult getUserFileListByRoot() {
+
+        return null;
+    }
+
+    @ApiOperation(value = "删除用户文件")
     @DeleteMapping(value = "/fileDelete")
     public ResponseResult fileDelete(String fileName, String path, HttpServletRequest request) {
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
-        //todo
-        return null;
+        virtualAddressService.delFile(diskUser, fileName, path);
+        return ResponseResult.createSuccessResult("文件删除成功！");
     }
 
     @GetMapping(value = "/search")
     public ResponseResult search(String keyword, HttpServletRequest request) {
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
-        //todo
-        return null;
+        List<DiskFileVo> diskFileVoList = diskFileService.search(keyword, diskUser);
+        return ResponseResult.createSuccessResult(diskFileVoList, "文件搜索成功");
     }
 }

@@ -59,6 +59,11 @@ public class VirtualAddress extends BaseEntity {
      */
     private Integer isRoot;
 
+    /**
+     * 是否删除 1是 0否
+     */
+    private Integer isDelete;
+
     private Date createTime;
 
     private Date updateTime;

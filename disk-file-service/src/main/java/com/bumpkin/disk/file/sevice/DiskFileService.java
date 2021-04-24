@@ -33,7 +33,7 @@ public interface DiskFileService extends IService<DiskFile> {
      * @param path 文件所在虚拟路径
      * @return
      */
-    void download(String fileName, DiskUser diskUser, String path, HttpServletResponse response) throws FileNotFoundException;
+    void download(String fileName, DiskUser diskUser, String path, HttpServletResponse response) throws Exception;
 
     /**
      * 重命名文件
@@ -80,12 +80,11 @@ public interface DiskFileService extends IService<DiskFile> {
 
     /**
      * 搜索文件
-     * @param key
-     * @param userName
-     * @param path
+     * @param keyword
+     * @param diskUser
      * @return
      */
-    List<DiskFileVo> search(String key, String userName, String path);
+    List<DiskFileVo> search(String keyword, DiskUser diskUser);
 
     String getFileRootPath();
 }

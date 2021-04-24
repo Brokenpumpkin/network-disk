@@ -34,57 +34,31 @@ public class DownloadController {
     @Value("${fileRootPath}")
     public String fileRootPath;
 
-    //MD5文件的大小
-    public static int size;
-
     @Autowired
     public DiskFileService diskFileService;
 
     @Autowired
-    private RedisUtil redisUtil;
-
-    @Value("${size}")
-    public void setSize(int size) {
-        DownloadController.size = size;
-    }
+    private WebUtil webUtil;
 
     /**
      *
-     * @param fileName 文件名
-     * @param path 该用户文件夹下的文件路径
+     * @param fileName
+     * @param path
      * @param request
-     * @return 需要下载的文件在本地的路径
+     * @param response
+     * @throws FileNotFoundException
      */
-    @GetMapping(value = "fileDownload")
-    public void download(@RequestParam String fileName, String path,
-                                   HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException {
+    @GetMapping(value = "/fileDownload")
+    public void download(@RequestParam String fileName, @RequestParam String path,
+                                   HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (path == null) {
             path = "/";
         }
         //获取用户
-        String accessToken = StrUtil.subAfter(request.getHeader("Authorization"), " ", false);
-        log.info(accessToken);
-        String s = redisUtil.get(accessToken);
-        DiskUser diskUser = JSONUtil.toBean(JSONUtil.parseObj(s), DiskUser.class);
+        // 获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
         // 下载文件
         diskFileService.download(fileName, diskUser, path, response);
-//        try {
-//            //这里校验要填真实的路经
-//            String newLink = link.replace("/data/", fileRootPath);
-//            String[] md5Array = FileSplitUtil.splitBySizeSubSection(newLink, size,
-//                    fileRootPath + "/tempMd5/" + userName + "/");
-////            result.setObj(md5Array);
-//            if (!link.isEmpty()) {
-//                return ResponseResult.createSuccessResult(md5Array,link);
-//            } else {
-//                log.warn("下载失败");
-//                return ResponseResult.createErrorResult("");
-//            }
-//        } catch (Exception e) {
-//            log.error("Exception:", e);
-//            return ResponseResult.createErrorResult("");
-//        }
-
     }
 
     @GetMapping(value = "/test")

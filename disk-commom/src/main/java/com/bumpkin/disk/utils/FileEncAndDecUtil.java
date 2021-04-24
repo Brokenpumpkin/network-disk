@@ -1,5 +1,7 @@
 package com.bumpkin.disk.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -13,6 +15,7 @@ import java.util.Random;
  * @Author: linzhiquan
  * @CreateTime: 2021/04/22 21:13
  */
+@Slf4j
 public class FileEncAndDecUtil {
 
     private static String ALGORITHM_PBE = "PBEWITHMD5andDES";
@@ -31,11 +34,11 @@ public class FileEncAndDecUtil {
         byte[] fileContent = new byte[(int) fileLength];
 
         if (!srcFile.exists()) {
-            System.out.println("source file not exist");
+            log.warn("source file not exist");
             return;
         }
         if (!encFile.exists()) {
-            System.out.println("encrypt file created");
+            log.warn("encrypt file created");
             encFile.createNewFile();
         }
         InputStream fis = new FileInputStream(srcFile);
@@ -92,12 +95,17 @@ public class FileEncAndDecUtil {
      * @return
      * @throws Exception
      */
-    public static byte[] initSalt() throws Exception {
-        byte[] salt = new byte[8];
+    public static String initSalt() throws Exception {
         Random random = new Random();
-        random.nextBytes(salt);
-        return salt;
+        int i = random.nextInt(100000000);
+        return Integer.toString(i);
     }
+    //    public static byte[] initSalt() throws Exception {
+//        byte[] salt = new byte[8];
+//        Random random = new Random();
+//        random.nextBytes(salt);
+//        return salt;
+//    }
 
     /**
      * 转换密钥
@@ -114,31 +122,31 @@ public class FileEncAndDecUtil {
 
     /**
      * PBE加密算法
-     * @param pBEByte
+     * @param pbeByte
      * @param key
      * @param salt
      * @return
      * @throws Exception
      */
-    private static byte[] encoderByPBE(byte[] pBEByte, Key key, byte[] salt) throws Exception{
+    private static byte[] encoderByPBE(byte[] pbeByte, Key key, byte[] salt) throws Exception{
         PBEParameterSpec paramSpec = new PBEParameterSpec(salt, 100);
         Cipher cipher = Cipher.getInstance(ALGORITHM_PBE);
         cipher.init(Cipher.ENCRYPT_MODE, key, paramSpec);
-        return cipher.doFinal(pBEByte);
+        return cipher.doFinal(pbeByte);
     }
 
     /**
      * PBE解密算法
-     * @param pBEByte
+     * @param pbeByte
      * @param key
      * @param salt
      * @return
      * @throws Exception
      */
-    private static byte[] decoderByPBE(byte[] pBEByte, Key key, byte[] salt) throws Exception{
+    private static byte[] decoderByPBE(byte[] pbeByte, Key key, byte[] salt) throws Exception{
         PBEParameterSpec paramSpec = new PBEParameterSpec(salt, 100);
         Cipher cipher = Cipher.getInstance(ALGORITHM_PBE);
         cipher.init(Cipher.DECRYPT_MODE, key, paramSpec);
-        return cipher.doFinal(pBEByte);
+        return cipher.doFinal(pbeByte);
     }
 }

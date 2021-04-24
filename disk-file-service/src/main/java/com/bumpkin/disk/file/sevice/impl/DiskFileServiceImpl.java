@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.dao.DiskFileMapper;
@@ -29,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,12 +48,6 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
 
     @Autowired
     public VirtualAddressService virtualAddressService;
-
-
-//    @Value("${fileRootPath}")
-//    public void setFileRootPath(String fileRootPath) {
-//        FileServiceImpl.fileRootPath = fileRootPath;
-//    }
 
     @Transactional
     @Override
@@ -77,12 +73,13 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
             }
             assert originalFilename != null;
             File encodeFile = new File(saveFilePath, saveFileName);
-            FileUtils.copyInputStreamToFile(file.getInputStream(), encodeFile);
+            // 文件不加密直接存储
+//            FileUtils.copyInputStreamToFile(file.getInputStream(), encodeFile);
 
-            //文件加密
-//            assert diskUser != null;
-//            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
-//            FileEncAndDecUtil.encFile(tempFile, encodeFile, key, diskUser.getSalt());
+            // 文件加密
+            assert diskUser != null;
+            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
+            FileEncAndDecUtil.encFile(tempFile, encodeFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
 
             DiskFile newFile = new DiskFile();
             newFile.setId(fileUuid);
@@ -106,21 +103,28 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
     }
 
     @Override
-    public void download(String fileName, DiskUser diskUser, String path, HttpServletResponse response) {
+    public void download(String fileName, DiskUser diskUser, String path, HttpServletResponse response) throws Exception {
 //        if (fileName.isEmpty()) {
 //            return ResponseResult.createErrorResult("文件名字为空！");
 //        }
-        //todo 未测试
         VirtualAddress virtualAddress = virtualAddressService.getDiskFileByFileNameAndParentPathAndUserId(fileName, path, diskUser.getUserId());
         if (virtualAddress != null) {
             String fileId = virtualAddress.getFileId();
             DiskFile diskFile = this.baseMapper.selectById(fileId);
             String fileLocalLocation = diskFile.getFileLocalLocation();
-            File file = new File(fileLocalLocation);
+
+            // 文件解密
+            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
+            File file = new File(fileLocalLocation + diskFile.getSaveFileName());
+            File decFile = new File(fileLocalLocation + diskFile.getOriginalName());
+            FileEncAndDecUtil.decFile(file, decFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
+
             BufferedInputStream bis = null;
-            try (InputStream inputStream = new FileInputStream(file)) {
+            try (InputStream inputStream = new FileInputStream(decFile)) {
+                //application/octet-stream application/octet-binary
                 response.setContentType("application/octet-stream");
-                response.setHeader("Content-Disposition", "attachment;filename=" + new String(fileName.getBytes(), "ISO-8859-1"));
+                response.setHeader("Content-Disposition", "attachment;filename=" + new String(fileName.getBytes(), StandardCharsets.UTF_8));
+
                 byte[] buff = new byte[1024];
                 OutputStream os;
                 os = response.getOutputStream();
@@ -141,17 +145,20 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
                         e.printStackTrace();
                     }
                 }
+                decFile.delete();
             }
         }
     }
 
+    @Transactional
     @Override
     public Boolean userFileRename(String oldName, String newName, DiskUser diskUser, String path) {
         VirtualAddress virtualAddress = virtualAddressService.getDiskFileByFileNameAndParentPathAndUserId(oldName, path, diskUser.getUserId());
         if (virtualAddress != null) {
-            String fileId = virtualAddress.getFileId();
-            DiskFile diskFile = this.baseMapper.selectById(fileId);
-            diskFile.setOriginalName(newName);
+            virtualAddress.setUserFileName(newName);
+            UpdateWrapper<VirtualAddress> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("user_file_name", oldName);
+            virtualAddressService.update(virtualAddress, updateWrapper);
             return true;
         }
         return false;
@@ -188,9 +195,20 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
     }
 
     @Override
-    public List<DiskFileVo> search(String key, String userName, String path) {
-
-        return null;
+    public List<DiskFileVo> search(String keyword, DiskUser diskUser) {
+        QueryWrapper<VirtualAddress> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", diskUser.getUserId());
+        queryWrapper.eq("user_file_name", keyword);
+        queryWrapper.eq("is_delete", 0);
+        List<VirtualAddress> virtualAddressList = virtualAddressService.getBaseMapper().selectList(queryWrapper);
+        List<DiskFileVo> diskFileVoList = new ArrayList<>();
+        for (VirtualAddress v : virtualAddressList) {
+            DiskFileVo diskFileVo = new DiskFileVo();
+            BeanUtils.copyProperties(v,diskFileVo);
+            diskFileVo.setFileSize(FileSizeUtil.getNetFileSizeDescription(v.getFileSize()));
+            diskFileVoList.add(diskFileVo);
+        }
+        return diskFileVoList;
     }
 
     @Override

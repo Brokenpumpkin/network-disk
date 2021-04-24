@@ -26,5 +26,5 @@ public class DiskUser {
 
     private String alias;
 
-    private byte[] salt;
+    private String salt;
 }

@@ -3,6 +3,7 @@ package com.bumpkin.disk.file.sevice.impl;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bumpkin.disk.entities.BaseEntity;
 import com.bumpkin.disk.entities.DiskUser;
@@ -35,6 +36,7 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         virtualAddress.setFileSize(diskFile.getFileSize());
         virtualAddress.setIsDir(0);
         virtualAddress.setIsRoot(0);
+        virtualAddress.setIsDelete(0);
         //父级路径只写上一级文件夹
         virtualAddress.setParentPath("/" + StrUtil.subAfter(parentPath, "/", true));
         virtualAddress.setFullParentPath(parentPath);
@@ -57,6 +59,7 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         virtualAddress.setFileSize(0);
         virtualAddress.setIsDir(1);
         virtualAddress.setIsRoot(0);
+        virtualAddress.setIsDelete(0);
         //父级路径只写上一级文件夹
         virtualAddress.setParentPath("/" + StrUtil.subAfter(parentPath, "/", true));
         virtualAddress.setFullParentPath(parentPath);
@@ -64,6 +67,19 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         virtualAddress.setCreateTime(newEntity.getCreateTime());
         virtualAddress.setUpdateTime(newEntity.getUpdateTime());
         return this.baseMapper.insert(virtualAddress) == 1;
+    }
+
+    @Override
+    public Boolean delFile(DiskUser diskUser, String fileName, String parentPath) {
+        VirtualAddress virtualAddress = this.getDiskFileByFileNameAndParentPathAndUserId(fileName, parentPath, diskUser.getUserId());
+        if (virtualAddress != null) {
+            virtualAddress.setIsDelete(1);
+            UpdateWrapper<VirtualAddress> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("user_file_name", fileName);
+            this.baseMapper.update(virtualAddress, updateWrapper);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -82,6 +98,7 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         QueryWrapper<VirtualAddress> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", diskUser.getUserId());
         queryWrapper.eq("full_parent_path", fullParentPath);
+        queryWrapper.eq("is_delete", 0);
         return this.baseMapper.selectList(queryWrapper);
     }
 
@@ -89,8 +106,9 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
     public VirtualAddress getDiskFileByFileNameAndParentPathAndUserId(String fileName, String parentPath, String userId) {
         QueryWrapper<VirtualAddress> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId);
-        queryWrapper.eq("file_name", fileName);
+        queryWrapper.eq("user_file_name", fileName);
         queryWrapper.eq("full_parent_path", parentPath);
+        queryWrapper.eq("is_delete", 0);
         return this.baseMapper.selectOne(queryWrapper);
     }
 }
