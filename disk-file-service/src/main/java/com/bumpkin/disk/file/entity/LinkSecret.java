@@ -1,5 +1,7 @@
 package com.bumpkin.disk.file.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -13,6 +15,7 @@ import java.util.Date;
 @TableName(value = "link_secret")
 public class LinkSecret {
 
+    @TableId
     private String id;
 
     private String fileId;
@@ -21,7 +24,8 @@ public class LinkSecret {
 
     private String userId;
 
-    private String localLink;
+    @TableField(value = "local_link")
+    private String filePath;
 
     private Date expireDate;
 

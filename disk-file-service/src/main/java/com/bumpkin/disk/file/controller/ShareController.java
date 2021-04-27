@@ -1,7 +1,10 @@
 package com.bumpkin.disk.file.controller;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.system.SystemUtil;
 import com.bumpkin.disk.entities.DiskUser;
+import com.bumpkin.disk.file.dto.CheckSecretDto;
+import com.bumpkin.disk.file.dto.CheckShareLinkDto;
 import com.bumpkin.disk.file.entity.LinkSecret;
 import com.bumpkin.disk.file.entity.VirtualAddress;
 import com.bumpkin.disk.file.sevice.DiskFileService;
@@ -15,11 +18,10 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
+import javax.naming.spi.ResolveResult;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Calendar;
 import java.util.Date;
@@ -41,28 +43,44 @@ public class ShareController {
     private WebUtil webUtil;
 
     @Autowired
-    private DiskFileService diskFileService;
-
-    @Autowired
     private VirtualAddressService virtualAddressService;
 
     @Autowired
     private LinkSecretService linkSecretService;
 
-    @ApiOperation(value = "shareCallBack(验证提取码是否正确)")
-    @GetMapping(value = "/fileShareCallback")
-    public ResponseResult fileShareCallback(String link) {
-        log.warn("执行shareCallBack接口！：" + link);
-        if (link.isEmpty()) {
-            return ResponseResult.createErrorResult("提取码为空");
+    @ApiOperation(value = "验证提取码是否正确")
+    @PostMapping(value = "/checkSecret")
+    public ResponseResult checkSecret(@RequestBody CheckSecretDto checkSecretDto, HttpServletRequest request, BindingResult results) {
+        if (results.hasErrors()) {
+            return  ResponseResult.createErrorResult(results.getFieldError().getDefaultMessage());
         }
-        String downloadLink = diskFileService.fileShareCodeDecode(link);
-        log.warn("downloadLink:" + downloadLink);
-        if (!"null".equals(downloadLink)) {
-            return ResponseResult.createSuccessResult(downloadLink, "提取码正确");
-        } else {
+        //获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
+        if (!linkSecretService.checkShareFileSecret(checkSecretDto, diskUser.getUserId())) {
             return ResponseResult.createErrorResult("提取码不正确！");
         }
+        return ResponseResult.createSuccessResult("提取码正确！");
+
+    }
+
+    @ApiOperation(value = "验证分享链接后缀")
+    @PostMapping(value = "/checkShareLink")
+    public ResponseResult checkShareLink(@RequestBody CheckShareLinkDto checkShareLinkDto, HttpServletRequest request, BindingResult results) {
+        if (results.hasErrors()) {
+            return  ResponseResult.createErrorResult(results.getFieldError().getDefaultMessage());
+        }
+        //获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
+        if (!linkSecretService.checkShareLink(checkShareLinkDto, diskUser.getUserId())) {
+            return ResponseResult.createErrorResult("链接后缀不正确！");
+        }
+        return ResponseResult.createSuccessResult("链接后缀正确！");
+    }
+
+    @ApiOperation(value = "保存到我的网盘")
+    @GetMapping(value = "/saveToDisk")
+    public ResponseResult saveToDisk() {
+        return null;
     }
 
     @ApiOperation(value = "文件提取码生成")
@@ -73,7 +91,7 @@ public class ShareController {
                                        HttpServletRequest request) {
         int expireDays = 1;
         if (expireDay != null) {
-            if (expireDay.equals("永久有效")) {
+            if ("永久有效".equals(expireDay)) {
                 expireDays = -1;
             } else {
                 expireDays = Integer.parseInt(expireDay);
@@ -88,19 +106,17 @@ public class ShareController {
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
         String filePathAndName = path + "/" + fileName;
-        String localLink = "/data/share/" + filePathAndName;
-        log.warn("filePathAndName:" + filePathAndName);
-        String b = diskFileService.fileShareCodeEncode(filePathAndName);
+        String b = linkSecretService.fileShareCodeEncode(filePathAndName);
         String secret = "";
 
-        LinkSecret linkSecret = linkSecretService.findLinkSecretByLocalLinkAndUserId(localLink, diskUser.getUserId());
+        LinkSecret linkSecret = linkSecretService.getLinkSecretByLocalLinkAndUserId(filePathAndName, diskUser.getUserId());
         VirtualAddress virtualDiskFile = virtualAddressService.getDiskFileByFileNameAndParentPathAndUserId(fileName, path, diskUser.getUserId());
         if (linkSecret == null) {
             //设置提取密码
             int secretLen = 4;
             secret = PassWordCreateUtil.createPassWord(secretLen);
             linkSecret = new LinkSecret();
-            linkSecret.setLocalLink(localLink);
+            linkSecret.setFilePath(filePathAndName);
             linkSecret.setFileId(virtualDiskFile.getFileId());
             linkSecret.setSecret(secret);
             linkSecret.setUserId(diskUser.getUserId());

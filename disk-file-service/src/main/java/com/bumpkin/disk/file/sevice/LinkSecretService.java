@@ -1,6 +1,8 @@
 package com.bumpkin.disk.file.sevice;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.bumpkin.disk.file.dto.CheckSecretDto;
+import com.bumpkin.disk.file.dto.CheckShareLinkDto;
 import com.bumpkin.disk.file.entity.LinkSecret;
 
 import java.util.Date;
@@ -17,21 +19,20 @@ public interface LinkSecretService extends IService<LinkSecret> {
      * @param userId
      * @return
      */
-    LinkSecret findLinkSecretByLocalLinkAndUserId(String localLink, String userId);
+    LinkSecret getLinkSecretByLocalLinkAndUserId(String localLink, String userId);
 
     /**
-     *
-     * @param secretLink
+     * 文件提取码-生成
+     * @param filePathAndName
      * @return
      */
-    LinkSecret findLinkSecretBySecretLink(String secretLink);
+    String fileShareCodeEncode(String filePathAndName);
 
-    /**
-     *
-     * @param linkSecret
-     * @param date
-     * @return
-     */
+    Boolean checkShareFileSecret(CheckSecretDto checkSecretDto, String userId);
+
+    Boolean checkShareLink(CheckShareLinkDto checkShareLinkDto, String userId);
+
     Date updateExpireDay(LinkSecret linkSecret, Date date);
+
     Date updateShareDate(LinkSecret linkSecret, Date date);
 }

@@ -64,20 +64,6 @@ public interface DiskFileService extends IService<DiskFile> {
     Boolean userFileDirMove(String fileName, String oldPath, String newPath, DiskUser diskUser);
 
     /**
-     * 文件提取码-生成
-     * @param filePathAndName
-     * @return
-     */
-    String fileShareCodeEncode(String filePathAndName);
-
-    /**
-     * 文件提取码-解析
-     * @param code
-     * @return
-     */
-    String fileShareCodeDecode(String code);
-
-    /**
      * 列出用户文件
      * @param diskUser
      * @param path

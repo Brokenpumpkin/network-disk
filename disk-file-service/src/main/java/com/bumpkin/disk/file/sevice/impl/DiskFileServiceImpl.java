@@ -50,9 +50,6 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
     @Value("${fileRootPath}")
     public String fileRootPath;//static
 
-    // 自定义密钥
-    static private String key = "aosdifu234oiu348f";
-
     @Autowired
     public VirtualAddressService virtualAddressService;
 
@@ -164,67 +161,6 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
     @Override
     public Boolean userFileDirMove(String fileName, String oldPath, String newPath, DiskUser diskUser) {
         return virtualAddressService.fileDirVirtualAddressMove(fileName, oldPath, newPath, diskUser);
-    }
-
-    @Override
-    public String fileShareCodeEncode(String filePathAndName) {
-        EncryptUtil des;
-        try {
-            des = new EncryptUtil(key, "utf-8");
-            return des.encode(filePathAndName);
-        } catch (Exception e) {
-            log.error("Exception:", e);
-        }
-        return "null";
-    }
-
-    @Override
-    public String fileShareCodeDecode(String code) {
-        EncryptUtil des;
-        try {
-            des = new EncryptUtil(key, "utf-8");
-            log.warn("00 code:" + code);
-            String filePathAndName = des.decode(code);
-            log.warn("00 filePathAndName:" + filePathAndName);
-            String[] arr = filePathAndName.split("/");
-            LinkSecret linkSecret = linkSecretService.findLinkSecretBySecretLink(code);
-            String[] localLink = linkSecret.getLocalLink().split("/");
-            String userName = localLink[3];
-            //            String userName = arr[0];
-            String fileName = arr[arr.length - 1];
-            arr[arr.length - 1] = "";
-            //            String path = StringUtils.join(arr, "/");
-            String path = userName + "/";
-            if (localLink.length > 5) {
-                for (int k = 4; k < localLink.length - 1; k++) {
-                    path = path + localLink[k] + "/";
-                }
-            }
-            log.warn("0 userName:" + userName);
-            log.warn("1 filePathAndName:" + filePathAndName);
-            log.warn("2 fileName:" + fileName);
-            log.warn("3 path:" + path);
-            // 服务器下载的文件所在的本地路径的文件夹
-            String saveFilePath = fileRootPath + "share" + "/" + path;
-            //            String saveFilePath = fileRootPath + "/" + path;
-            log.warn("1 saveFilePath:" + saveFilePath);
-            // 判断文件夹是否存在-建立文件夹
-            File filePathDir = new File(saveFilePath);
-            if (!filePathDir.exists()) {
-                // mkdirs递归创建父目录
-                boolean b = filePathDir.mkdirs();
-                log.warn("递归创建父目录:" + b);
-            }
-            saveFilePath = fileRootPath + "/" + path + "/" + fileName;
-            String link = saveFilePath.replace(fileRootPath, "/data/");
-            link = StringUtil.stringSlashToOne(link);
-            log.warn("4 link:" + link);
-            // 返回下载路径
-            return link;
-        } catch (Exception e) {
-            log.error("Exception:", e);
-            return "null";
-        }
     }
 
     @Override
