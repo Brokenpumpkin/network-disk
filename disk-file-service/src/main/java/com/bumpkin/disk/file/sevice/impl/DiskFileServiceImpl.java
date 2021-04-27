@@ -9,17 +9,20 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.dao.DiskFileMapper;
 import com.bumpkin.disk.file.entity.DiskFile;
+import com.bumpkin.disk.file.entity.LinkSecret;
 import com.bumpkin.disk.file.entity.VirtualAddress;
 import com.bumpkin.disk.file.sevice.DiskFileService;
+import com.bumpkin.disk.file.sevice.LinkSecretService;
 import com.bumpkin.disk.file.sevice.VirtualAddressService;
-import com.bumpkin.disk.file.util.FileSizeUtil;
-import com.bumpkin.disk.file.util.MD5Util;
-import com.bumpkin.disk.file.util.MultipartFileUtil;
+import com.bumpkin.disk.file.util.*;
 import com.bumpkin.disk.file.vo.DiskFileVo;
+import com.bumpkin.disk.file.vo.UserDirVo;
 import com.bumpkin.disk.result.ResponseResult;
 import com.bumpkin.disk.utils.EntityUtil;
 import com.bumpkin.disk.utils.FileEncAndDecUtil;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jmimemagic.Magic;
+import net.sf.jmimemagic.MagicMatch;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.ArrayList;
@@ -46,8 +50,14 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
     @Value("${fileRootPath}")
     public String fileRootPath;//static
 
+    // 自定义密钥
+    static private String key = "aosdifu234oiu348f";
+
     @Autowired
     public VirtualAddressService virtualAddressService;
+
+    @Autowired
+    public LinkSecretService linkSecretService;
 
     @Transactional
     @Override
@@ -104,9 +114,6 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
 
     @Override
     public void download(String fileName, DiskUser diskUser, String path, HttpServletResponse response) throws Exception {
-//        if (fileName.isEmpty()) {
-//            return ResponseResult.createErrorResult("文件名字为空！");
-//        }
         VirtualAddress virtualAddress = virtualAddressService.getDiskFileByFileNameAndParentPathAndUserId(fileName, path, diskUser.getUserId());
         if (virtualAddress != null) {
             String fileId = virtualAddress.getFileId();
@@ -115,38 +122,23 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
 
             // 文件解密
             Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
-            File file = new File(fileLocalLocation + diskFile.getSaveFileName());
+            File encfile = new File(fileLocalLocation + diskFile.getSaveFileName());
             File decFile = new File(fileLocalLocation + diskFile.getOriginalName());
-            FileEncAndDecUtil.decFile(file, decFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
+            FileEncAndDecUtil.decFile(encfile, decFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
 
-            BufferedInputStream bis = null;
-            try (InputStream inputStream = new FileInputStream(decFile)) {
-                //application/octet-stream application/octet-binary
-                response.setContentType("application/octet-stream");
-                response.setHeader("Content-Disposition", "attachment;filename=" + new String(fileName.getBytes(), StandardCharsets.UTF_8));
+            byte[] bytes = FileUtils.readFileToByteArray(decFile);
+            MagicMatch magicMatch = Magic.getMagicMatch(decFile, true, false);
 
-                byte[] buff = new byte[1024];
-                OutputStream os;
-                os = response.getOutputStream();
-                bis = new BufferedInputStream(inputStream);
-                int i = bis.read(buff);
-                while (i != -1) {
-                    os.write(buff, 0, buff.length);
-                    os.flush();
-                    i = bis.read(buff);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }finally {
-                if (bis != null) {
-                    try {
-                        bis.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                decFile.delete();
-            }
+            response.setStatus(200);
+            response.setContentType("application/octet-stream;charset=UTF-8");
+            response.setHeader("Access-Control-Expose-Headers", "fileName");
+            response.setHeader("fileName", URLEncoder.encode(fileName, "UTF-8"));
+            response.setHeader("Access-Control-Expose-Headers", "type");
+            response.setHeader("type", magicMatch.getMimeType());
+            response.setHeader("Accept-Ranges", "bytes");
+            //new String(fileName.getBytes(), StandardCharsets.UTF_8)
+            response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
+            response.getOutputStream().write(bytes);
         }
     }
 
@@ -176,8 +168,63 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
 
     @Override
     public String fileShareCodeEncode(String filePathAndName) {
+        EncryptUtil des;
+        try {
+            des = new EncryptUtil(key, "utf-8");
+            return des.encode(filePathAndName);
+        } catch (Exception e) {
+            log.error("Exception:", e);
+        }
+        return "null";
+    }
 
-        return null;
+    @Override
+    public String fileShareCodeDecode(String code) {
+        EncryptUtil des;
+        try {
+            des = new EncryptUtil(key, "utf-8");
+            log.warn("00 code:" + code);
+            String filePathAndName = des.decode(code);
+            log.warn("00 filePathAndName:" + filePathAndName);
+            String[] arr = filePathAndName.split("/");
+            LinkSecret linkSecret = linkSecretService.findLinkSecretBySecretLink(code);
+            String[] localLink = linkSecret.getLocalLink().split("/");
+            String userName = localLink[3];
+            //            String userName = arr[0];
+            String fileName = arr[arr.length - 1];
+            arr[arr.length - 1] = "";
+            //            String path = StringUtils.join(arr, "/");
+            String path = userName + "/";
+            if (localLink.length > 5) {
+                for (int k = 4; k < localLink.length - 1; k++) {
+                    path = path + localLink[k] + "/";
+                }
+            }
+            log.warn("0 userName:" + userName);
+            log.warn("1 filePathAndName:" + filePathAndName);
+            log.warn("2 fileName:" + fileName);
+            log.warn("3 path:" + path);
+            // 服务器下载的文件所在的本地路径的文件夹
+            String saveFilePath = fileRootPath + "share" + "/" + path;
+            //            String saveFilePath = fileRootPath + "/" + path;
+            log.warn("1 saveFilePath:" + saveFilePath);
+            // 判断文件夹是否存在-建立文件夹
+            File filePathDir = new File(saveFilePath);
+            if (!filePathDir.exists()) {
+                // mkdirs递归创建父目录
+                boolean b = filePathDir.mkdirs();
+                log.warn("递归创建父目录:" + b);
+            }
+            saveFilePath = fileRootPath + "/" + path + "/" + fileName;
+            String link = saveFilePath.replace(fileRootPath, "/data/");
+            link = StringUtil.stringSlashToOne(link);
+            log.warn("4 link:" + link);
+            // 返回下载路径
+            return link;
+        } catch (Exception e) {
+            log.error("Exception:", e);
+            return "null";
+        }
     }
 
     @Override
@@ -195,10 +242,34 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
     }
 
     @Override
+    public List<UserDirVo> userDirList(DiskUser diskUser, String path) {
+        if (!path.contains("/")) {
+            path = "/" + diskUser.getUsername();
+        }
+        QueryWrapper<VirtualAddress> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("full_parent_path", path);
+        queryWrapper.eq("is_dir", 1);
+        queryWrapper.eq("is_delete", 0);
+        List<VirtualAddress> virtualAddresses = virtualAddressService.getBaseMapper().selectList(queryWrapper);
+        List<UserDirVo> userDirVoList = null;
+        if (virtualAddresses != null) {
+            userDirVoList = new ArrayList<>();
+            for (VirtualAddress v: virtualAddresses) {
+                UserDirVo userDirVo = new UserDirVo();
+                userDirVo.setId(v.getId());
+                userDirVo.setName(v.getUserFileName());
+                userDirVo.setPath(v.getFullParentPath());
+                userDirVoList.add(userDirVo);
+            }
+        }
+        return userDirVoList;
+    }
+
+    @Override
     public List<DiskFileVo> search(String keyword, DiskUser diskUser) {
         QueryWrapper<VirtualAddress> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", diskUser.getUserId());
-        queryWrapper.eq("user_file_name", keyword);
+        queryWrapper.like("user_file_name", keyword);
         queryWrapper.eq("is_delete", 0);
         List<VirtualAddress> virtualAddressList = virtualAddressService.getBaseMapper().selectList(queryWrapper);
         List<DiskFileVo> diskFileVoList = new ArrayList<>();

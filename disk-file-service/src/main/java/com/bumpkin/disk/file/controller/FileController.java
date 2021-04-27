@@ -1,8 +1,5 @@
 package com.bumpkin.disk.file.controller;
 
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
-import cn.hutool.system.SystemUtil;
 import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.dto.DirCreateDto;
 import com.bumpkin.disk.file.dto.FileMoveDto;
@@ -12,8 +9,8 @@ import com.bumpkin.disk.file.sevice.VirtualAddressService;
 import com.bumpkin.disk.file.util.MyFileUtil;
 import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.file.vo.DiskFileVo;
+import com.bumpkin.disk.file.vo.UserDirVo;
 import com.bumpkin.disk.result.ResponseResult;
-import com.bumpkin.disk.utils.RedisUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +95,7 @@ public class FileController {
     }
 
     @ApiOperation(value = "移动用户文件")
-    @PostMapping(value = "fileMove")
+    @PostMapping(value = "/fileMove")
     public ResponseResult fileMove(@RequestBody @Valid FileMoveDto fileMoveDto, HttpServletRequest request, BindingResult results) {
         if (results.hasErrors()) {
             return  ResponseResult.createErrorResult(results.getFieldError().getDefaultMessage());
@@ -153,14 +149,16 @@ public class FileController {
     }
 
     @ApiOperation(value = "获取用户目录树形结构")
-    @GetMapping(value = "/getUserFileListByRoot")
-    public ResponseResult getUserFileListByRoot() {
-
-        return null;
+    @GetMapping(value = "/getUserDirList")
+    public ResponseResult getUserDirList(@RequestParam String path, HttpServletRequest request) {
+        //获取用户
+        DiskUser diskUser = webUtil.getUserByRequest(request);
+        List<UserDirVo> userDirVoList = diskFileService.userDirList(diskUser, path);
+        return ResponseResult.createSuccessResult(userDirVoList, "获取用户目录成功！");
     }
 
     @ApiOperation(value = "删除用户文件")
-    @DeleteMapping(value = "/fileDelete")
+    @GetMapping(value = "/fileDelete")
     public ResponseResult fileDelete(String fileName, String path, HttpServletRequest request) {
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);

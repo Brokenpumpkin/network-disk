@@ -15,9 +15,11 @@ public class LinkSecret {
 
     private String id;
 
+    private String fileId;
+
     private String fileName;
 
-    private String userName;
+    private String userId;
 
     private String localLink;
 
@@ -25,11 +27,15 @@ public class LinkSecret {
 
     private String secret;
 
-    // 下载次数
+    /**
+     * 下载次数
+     */
     private int downloadNum;
 
     private String secretLink;
 
-    // 分享时间
+    /**
+     * 分享时间
+     */
     private Date shareDate;
 }

@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.entity.DiskFile;
 import com.bumpkin.disk.file.vo.DiskFileVo;
+import com.bumpkin.disk.file.vo.UserDirVo;
 import com.bumpkin.disk.result.ResponseResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileNotFoundException;
 import java.util.List;
 
 /**
@@ -71,12 +71,21 @@ public interface DiskFileService extends IService<DiskFile> {
     String fileShareCodeEncode(String filePathAndName);
 
     /**
+     * 文件提取码-解析
+     * @param code
+     * @return
+     */
+    String fileShareCodeDecode(String code);
+
+    /**
      * 列出用户文件
      * @param diskUser
      * @param path
      * @return
      */
     List<DiskFileVo> userFileList(DiskUser diskUser, String path);
+
+    List<UserDirVo> userDirList(DiskUser diskUser, String path);
 
     /**
      * 搜索文件

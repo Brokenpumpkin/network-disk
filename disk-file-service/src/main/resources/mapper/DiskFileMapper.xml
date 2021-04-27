@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bumpkin.disk.file.dao.DiskFileMapper">
+
+    <resultMap id="BaseResultMap" type="com.bumpkin.disk.file.entity.DiskFile">
+        <id column="id" property="id" />
+        <result column="file_id" property="fileId" />
+        <result column="original_name" property="originalName" />
+        <result column="file_size" property="fileSize" />
+        <result column="file_type" property="fileType" />
+        <result column="file_location" property="fileLocation" />
+        <result column="file_md5" property="fileMd5" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+</mapper>

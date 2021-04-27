@@ -71,6 +71,7 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
 
     @Override
     public Boolean delFile(DiskUser diskUser, String fileName, String parentPath) {
+        //todo 如果是删除文件夹就要级联删除
         VirtualAddress virtualAddress = this.getDiskFileByFileNameAndParentPathAndUserId(fileName, parentPath, diskUser.getUserId());
         if (virtualAddress != null) {
             virtualAddress.setIsDelete(1);
@@ -88,6 +89,12 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         if (virtualAddressFile != null) {
             virtualAddressFile.setParentPath(StrUtil.subBefore(newPath, "/", true));
             virtualAddressFile.setFullParentPath(newPath);
+            UpdateWrapper<VirtualAddress> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("user_file_name", fileName)
+                    .eq("user_id", diskUser.getUserId())
+                    .eq("full_parent_path", oldPath)
+                    .eq("is_delete", 0);
+            this.baseMapper.update(virtualAddressFile, updateWrapper);
             return true;
         }
         return false;
@@ -99,6 +106,7 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
         queryWrapper.eq("user_id", diskUser.getUserId());
         queryWrapper.eq("full_parent_path", fullParentPath);
         queryWrapper.eq("is_delete", 0);
+        queryWrapper.orderByDesc("is_dir");
         return this.baseMapper.selectList(queryWrapper);
     }
 
