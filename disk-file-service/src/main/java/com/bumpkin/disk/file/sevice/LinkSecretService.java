@@ -21,6 +21,8 @@ public interface LinkSecretService extends IService<LinkSecret> {
      */
     LinkSecret getLinkSecretByLocalLinkAndUserId(String localLink, String userId);
 
+    LinkSecret getLinkSecretBySecretLink(String link);
+
     /**
      * 文件提取码-生成
      * @param filePathAndName
@@ -28,9 +30,9 @@ public interface LinkSecretService extends IService<LinkSecret> {
      */
     String fileShareCodeEncode(String filePathAndName);
 
-    Boolean checkShareFileSecret(CheckSecretDto checkSecretDto, String userId);
+    Boolean checkShareFileSecret(CheckSecretDto checkSecretDto);
 
-    Boolean checkShareLink(CheckShareLinkDto checkShareLinkDto, String userId);
+    Boolean checkShareLink(CheckShareLinkDto checkShareLinkDto);
 
     Date updateExpireDay(LinkSecret linkSecret, Date date);
 

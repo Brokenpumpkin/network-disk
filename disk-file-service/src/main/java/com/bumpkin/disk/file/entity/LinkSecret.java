@@ -24,11 +24,17 @@ public class LinkSecret {
 
     private String userId;
 
+    /**
+     * 用户文件路径
+     */
     @TableField(value = "local_link")
     private String filePath;
 
     private Date expireDate;
 
+    /**
+     * 提取码
+     */
     private String secret;
 
     /**
@@ -36,6 +42,9 @@ public class LinkSecret {
      */
     private int downloadNum;
 
+    /**
+     * 分享链接后缀
+     */
     private String secretLink;
 
     /**

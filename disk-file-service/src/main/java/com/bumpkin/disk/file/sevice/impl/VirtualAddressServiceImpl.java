@@ -87,8 +87,9 @@ public class VirtualAddressServiceImpl extends ServiceImpl<VirtualAddressMapper,
     public Boolean fileDirVirtualAddressMove(String fileName, String oldPath, String newPath, DiskUser diskUser) {
         VirtualAddress virtualAddressFile = this.getDiskFileByFileNameAndParentPathAndUserId(fileName, oldPath, diskUser.getUserId());
         if (virtualAddressFile != null) {
-            virtualAddressFile.setParentPath(StrUtil.subBefore(newPath, "/", true));
+            virtualAddressFile.setParentPath("/" + StrUtil.subAfter(newPath, "/", true));
             virtualAddressFile.setFullParentPath(newPath);
+            virtualAddressFile.setUpdateTime(EntityUtil.getUpdateEntity().getUpdateTime());
             UpdateWrapper<VirtualAddress> updateWrapper = new UpdateWrapper<>();
             updateWrapper.eq("user_file_name", fileName)
                     .eq("user_id", diskUser.getUserId())

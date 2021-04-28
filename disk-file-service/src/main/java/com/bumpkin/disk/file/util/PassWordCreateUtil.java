@@ -17,7 +17,7 @@ public class PassWordCreateUtil {
         int random = createRandomInt();
         Random rd = new Random(random);
         final int maxNum = 62;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int rdGet;//取得随机数
         char[] str = {
                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
@@ -26,7 +26,8 @@ public class PassWordCreateUtil {
         };
         int count = 0;
         while (count < len) {
-            rdGet = Math.abs(rd.nextInt(maxNum));//生成的数最大为62-1
+            //生成的数最大为62-1
+            rdGet = Math.abs(rd.nextInt(maxNum));
             if (rdGet >= 0 && rdGet < str.length) {
                 sb.append(str[rdGet]);
                 count++;
@@ -42,7 +43,6 @@ public class PassWordCreateUtil {
         if (temp >= 100000) {
             temp = 99999;
         }
-        int tempint = (int) Math.ceil(temp);
-        return tempint;
+        return (int) Math.ceil(temp);
     }
 }

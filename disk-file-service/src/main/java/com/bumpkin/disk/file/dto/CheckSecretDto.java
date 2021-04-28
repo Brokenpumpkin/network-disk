@@ -9,9 +9,7 @@ import lombok.Data;
 @Data
 public class CheckSecretDto {
 
-    String fileName;
-
-    String path;
+    String link;
 
     String secret;
 }

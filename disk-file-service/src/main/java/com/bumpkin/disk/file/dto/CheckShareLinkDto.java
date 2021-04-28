@@ -9,9 +9,5 @@ import lombok.Data;
 @Data
 public class CheckShareLinkDto {
 
-    String fileName;
-
-    String path;
-
     String link;
 }

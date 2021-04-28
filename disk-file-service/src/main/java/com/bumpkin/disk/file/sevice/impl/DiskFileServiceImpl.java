@@ -145,6 +145,7 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
         VirtualAddress virtualAddress = virtualAddressService.getDiskFileByFileNameAndParentPathAndUserId(oldName, path, diskUser.getUserId());
         if (virtualAddress != null) {
             virtualAddress.setUserFileName(newName);
+            virtualAddress.setUpdateTime(EntityUtil.getUpdateEntity().getUpdateTime());
             UpdateWrapper<VirtualAddress> updateWrapper = new UpdateWrapper<>();
             updateWrapper.eq("user_file_name", oldName);
             virtualAddressService.update(virtualAddress, updateWrapper);

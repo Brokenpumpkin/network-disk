@@ -1,5 +1,6 @@
 package com.bumpkin.disk.file.sevice.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,6 +12,7 @@ import com.bumpkin.disk.file.sevice.LinkSecretService;
 import com.bumpkin.disk.file.util.EncryptUtil;
 import org.springframework.stereotype.Service;
 
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -29,20 +31,34 @@ public class LinkSecretServiceImpl extends ServiceImpl<LinkSecretMapper, LinkSec
     }
 
     @Override
-    public Boolean checkShareLink(CheckShareLinkDto checkShareLinkDto, String userId) {
+    public LinkSecret getLinkSecretBySecretLink(String link) {
         QueryWrapper<LinkSecret> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("secret_link", checkShareLinkDto.getLink())
-                .eq("user_id", userId)
-                .eq("local_link", checkShareLinkDto.getPath() + "/" + checkShareLinkDto.getFileName());
-        return this.baseMapper.selectOne(queryWrapper) != null;
+        queryWrapper.eq("secret_link", link);
+        return this.baseMapper.selectOne(queryWrapper);
     }
 
     @Override
-    public Boolean checkShareFileSecret(CheckSecretDto checkSecretDto, String userId) {
+    public Boolean checkShareLink(CheckShareLinkDto checkShareLinkDto) {
+        QueryWrapper<LinkSecret> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("secret_link", checkShareLinkDto.getLink());
+        LinkSecret linkSecret = this.baseMapper.selectOne(queryWrapper);
+        if (linkSecret != null) {
+            Date expireDate = linkSecret.getExpireDate();
+            if (expireDate == null) {
+                return true;
+            }
+            Calendar cal = Calendar.getInstance();
+            Date now = cal.getTime();
+            return DateUtil.compare(expireDate, now) >= 0;
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean checkShareFileSecret(CheckSecretDto checkSecretDto) {
         QueryWrapper<LinkSecret> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("secret", checkSecretDto.getSecret())
-                    .eq("user_id", userId)
-                    .eq("local_link", checkSecretDto.getPath() + "/" + checkSecretDto.getFileName());
+                    .eq("secret_link", checkSecretDto.getLink());
         return this.baseMapper.selectOne(queryWrapper) != null;
     }
 

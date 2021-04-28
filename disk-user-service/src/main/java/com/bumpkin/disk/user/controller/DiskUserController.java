@@ -90,5 +90,8 @@ public class DiskUserController {
         return diskUserService.add(userRegisterDto);
     }
 
-
+    @GetMapping(value = "/getUserById")
+    public DiskUser getUserById(@RequestParam String id) {
+        return diskUserService.getBaseMapper().selectById(id);
+    }
 }

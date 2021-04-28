@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: mogu-gateway
+    name: cloud-gateway
   main:
     allow-bean-definition-overriding: true
   servlet:
