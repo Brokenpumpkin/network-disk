@@ -11,9 +11,14 @@ import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.file.vo.DiskFileVo;
 import com.bumpkin.disk.file.vo.UserDirVo;
 import com.bumpkin.disk.result.ResponseResult;
+import com.qiniu.api.auth.AuthException;
+import com.qiniu.api.auth.digest.Mac;
+import com.qiniu.api.config.Config;
+import com.qiniu.api.rs.PutPolicy;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
@@ -47,9 +52,6 @@ public class FileController {
     @Autowired
     private WebUtil webUtil;
 
-    /**
-     * 文件重命名 文件夹重命名时 老名字写path 新名字写newName oldName填@dir@
-     */
     @ApiOperation(value = "文件重命名")
     @PostMapping(value = "/fileRename")
     public ResponseResult fileRename(@RequestBody FileRenameDto fileRenameDto, HttpServletRequest request) {
@@ -59,10 +61,12 @@ public class FileController {
         if (fileRenameDto.getOldName().isEmpty() || fileRenameDto.getNewName().isEmpty()) {
             return ResponseResult.createErrorResult("文件名字为空！");
         }
+        //todo 分享链接中的文件名也要重命名
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
-
-        if (diskFileService.userFileRename(fileRenameDto.getOldName(), fileRenameDto.getNewName(), diskUser, fileRenameDto.getPath())) {
+        if (diskFileService.userFileRename(fileRenameDto.getOldName()
+                , fileRenameDto.getNewName()
+                , diskUser, fileRenameDto.getPath())) {
             log.warn("重命名成功！");
             return ResponseResult.createSuccessResult("重命名成功！");
         }
@@ -72,7 +76,8 @@ public class FileController {
 
     @ApiOperation(value = "创建文件夹")
     @PostMapping(value = "/dirCreate")
-    public ResponseResult dirCreate(@RequestBody @Valid DirCreateDto dirCreateDto, HttpServletRequest request, BindingResult results) {
+    public ResponseResult dirCreate(@RequestBody @Valid DirCreateDto dirCreateDto
+            , HttpServletRequest request, BindingResult results) {
         if (results.hasErrors()) {
             return  ResponseResult.createErrorResult(results.getFieldError().getDefaultMessage());
         }
@@ -84,7 +89,6 @@ public class FileController {
         }
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
-
         // 创建文件夹
         boolean b = diskFileService.userDirCreate(dirCreateDto.getDirName(), dirCreateDto.getPath(), diskUser);
         if (b) {
@@ -96,7 +100,8 @@ public class FileController {
 
     @ApiOperation(value = "移动用户文件")
     @PostMapping(value = "/fileMove")
-    public ResponseResult fileMove(@RequestBody @Valid FileMoveDto fileMoveDto, HttpServletRequest request, BindingResult results) {
+    public ResponseResult fileMove(@RequestBody @Valid FileMoveDto fileMoveDto
+            , HttpServletRequest request, BindingResult results) {
         if (results.hasErrors()) {
             return  ResponseResult.createErrorResult(results.getFieldError().getDefaultMessage());
         }
@@ -109,7 +114,10 @@ public class FileController {
         // 获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
         // 移动文件
-        if (diskFileService.userFileDirMove(fileMoveDto.getFileName(), fileMoveDto.getOldPath(), fileMoveDto.getNewPath(), diskUser)) {
+        if (diskFileService.userFileDirMove(fileMoveDto.getFileName()
+                , fileMoveDto.getOldPath()
+                , fileMoveDto.getNewPath()
+                , diskUser)) {
             return ResponseResult.createSuccessResult("移动成功！");
         } else {
             return ResponseResult.createErrorResult("移动失败！");

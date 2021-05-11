@@ -1,5 +1,6 @@
 package com.bumpkin.disk.file.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -30,6 +31,7 @@ public class LinkSecret {
     @TableField(value = "local_link")
     private String filePath;
 
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Date expireDate;
 
     /**

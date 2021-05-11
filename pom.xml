@@ -18,7 +18,7 @@
 
     <modules>
         <module>disk-user-service</module>
-        <module>disk-commom</module>
+        <module>disk-common</module>
         <module>disk-file-service</module>
         <module>disk-auth</module>
         <module>disk-gateway</module>

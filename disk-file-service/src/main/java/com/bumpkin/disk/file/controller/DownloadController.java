@@ -40,14 +40,7 @@ public class DownloadController {
     @Autowired
     private WebUtil webUtil;
 
-    /**
-     *
-     * @param fileName
-     * @param path
-     * @param request
-     * @param response
-     * @throws FileNotFoundException
-     */
+
     @GetMapping(value = "/fileDownload")
     public void download(@RequestParam String fileName, @RequestParam String path,
                                    HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -55,7 +48,6 @@ public class DownloadController {
             path = "/";
         }
         //获取用户
-        // 获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
         // 下载文件
         diskFileService.download(fileName, diskUser, path, response);

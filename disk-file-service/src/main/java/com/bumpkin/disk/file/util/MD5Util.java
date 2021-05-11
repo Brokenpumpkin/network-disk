@@ -18,7 +18,7 @@ public class MD5Util {
     /**
      * md5加密的字符组成
      */
-    private static final char HEX_DIGITS[] = {
+    private static final char[] HEX_DIGITS = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
     };
 
@@ -38,7 +38,7 @@ public class MD5Util {
      * @param file
      * @return
      */
-    public static byte[] getFileMD5(final File file) {
+    private static byte[] getFileMD5(final File file) {
         if (file == null) {
             return null;
         }
@@ -49,7 +49,8 @@ public class MD5Util {
             dis = new DigestInputStream(fis, md);
             byte[] buffer = new byte[1024 * 256];
             while (true) {
-                if (!(dis.read(buffer) > 0)) {
+                //!(dis.read(buffer) > 0)
+                if (dis.read(buffer) <= 0) {
                     break;
                 }
             }

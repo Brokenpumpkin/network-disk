@@ -43,8 +43,7 @@ public class UploadController {
         // 获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
         if (diskUser != null) {
-            // 上传文件/
-            // 反馈用户信息
+            // 上传文件
             return diskFileService.upload(file, diskUser, path);
         }
         return ResponseResult.createErrorResult("用户不存在！");

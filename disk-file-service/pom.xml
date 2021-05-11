@@ -54,7 +54,7 @@
 
         <dependency>
             <groupId>com.bumpkin.disk</groupId>
-            <artifactId>disk-commom</artifactId>
+            <artifactId>disk-common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
@@ -105,6 +105,12 @@
             <groupId>p6spy</groupId>
             <artifactId>p6spy</artifactId>
             <version>3.9.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qiniu</groupId>
+            <artifactId>qiniu-java-sdk</artifactId>
+            <version>[6.1.7, 6.999]</version>
         </dependency>
     </dependencies>
 

@@ -63,7 +63,7 @@
 
         <dependency>
             <groupId>com.bumpkin.disk</groupId>
-            <artifactId>disk-commom</artifactId>
+            <artifactId>disk-common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 

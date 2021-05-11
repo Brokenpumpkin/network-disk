@@ -128,7 +128,6 @@ public class ShareController {
         //获取用户
         DiskUser diskUser = webUtil.getUserByRequest(request);
         String filePathAndName = path + "/" + fileName;
-//        String b = linkSecretService.fileShareCodeEncode(filePathAndName);
         String secretLink = IdUtil.fastSimpleUUID();
         String secret = "";
 
@@ -192,16 +191,13 @@ public class ShareController {
 
         byte[] bytes = FileUtils.readFileToByteArray(decFile);
         MagicMatch magicMatch = Magic.getMagicMatch(decFile, true, false);
-
         response.setStatus(200);
         response.setContentType(magicMatch.getMimeType());
         response.setHeader("Access-Control-Expose-Headers", "fileName");
         response.setHeader("fileName", URLEncoder.encode(diskFile.getOriginalName(), "UTF-8"));
-//        response.setHeader("Access-Control-Expose-Headers", "type");
-//        response.setHeader("type", magicMatch.getMimeType());
         response.setHeader("Accept-Ranges", "bytes");
-        //new String(fileName.getBytes(), StandardCharsets.UTF_8)
-        response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(diskFile.getOriginalName(), "UTF-8"));
+        response.setHeader("Content-Disposition"
+                , "attachment;filename=" + URLEncoder.encode(diskFile.getOriginalName(), "UTF-8"));
         response.getOutputStream().write(bytes);
     }
 }

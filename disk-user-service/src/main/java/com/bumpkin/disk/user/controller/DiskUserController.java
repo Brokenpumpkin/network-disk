@@ -59,7 +59,6 @@ public class DiskUserController {
             return ResponseResult.createErrorResult(result.getFieldError().getDefaultMessage());
         }
         String username = userLoginDto.getUsername();
-//        String phoneNum = userLoginDto.getPhoneNum();
         String password = userLoginDto.getPassword();
         DiskUser diskUser = diskUserService.getUserByUsername(username);
         if (diskUser == null) {
@@ -83,7 +82,8 @@ public class DiskUserController {
     @Transactional
     @ApiOperation(value = "注册")
     @PostMapping(value = "/register")
-    public ResponseResult register(@RequestBody @Valid DiskUserRegisterDto userRegisterDto, BindingResult result) throws Exception {
+    public ResponseResult register(@RequestBody @Valid DiskUserRegisterDto userRegisterDto, BindingResult result)
+            throws Exception {
         if (result.hasErrors()) {
             return ResponseResult.createErrorResult(result.getFieldError().getDefaultMessage());
         }
