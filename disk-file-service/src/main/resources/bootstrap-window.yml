@@ -35,33 +35,33 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
-up:
-  swagger:
-    enabled: true
-    title: cloud-printer
-    description: \u57FA\u4E8Ebootstrap\u98CE\u683C\u7684api\u6587\u6863
-    version: 1.0.0-SNAPSHOT
-    license: Apache License, Version 2.0
-    license-url: https://www.apache.org/licenses/LICENSE-2.0.html
-    terms-of-service-url: http://www.ffcs.cn/
-    contact:
-      name: zhanyr
-      url: http://localhost:${server.port}/doc.html
-      email: zhanyr@ffcs.cn
-    base-package: cn.ffcs.up.printer.controller
-    base-path: /**
-  oauth2:
-    url-permit-all:
-      - /swagger-ui.html
-      - /*/swagger-resources/**
-      - /swagger-resources/**
-      - /doc.html
-      - /v2/api-docs
-      - /*/v2/api-docs
-      - /*/v2/api-docs-ext
-      - /druid/**
-      - /webjars/**
-      - /websocket/**
+#up:
+#  swagger:
+#    enabled: true
+#    title: cloud-printer
+#    description: \u57FA\u4E8Ebootstrap\u98CE\u683C\u7684api\u6587\u6863
+#    version: 1.0.0-SNAPSHOT
+#    license: Apache License, Version 2.0
+#    license-url: https://www.apache.org/licenses/LICENSE-2.0.html
+#    terms-of-service-url: http://www.ffcs.cn/
+#    contact:
+#      name: zhanyr
+#      url: http://localhost:${server.port}/doc.html
+#      email: zhanyr@ffcs.cn
+#    base-package: cn.ffcs.up.printer.controller
+#    base-path: /**
+#  oauth2:
+#    url-permit-all:
+#      - /swagger-ui.html
+#      - /*/swagger-resources/**
+#      - /swagger-resources/**
+#      - /doc.html
+#      - /v2/api-docs
+#      - /*/v2/api-docs
+#      - /*/v2/api-docs-ext
+#      - /druid/**
+#      - /webjars/**
+#      - /websocket/**
 
 info:
   version: "@project.version@"
@@ -90,11 +90,12 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     cache-enabled: false
     # 是否将sql打印到控制面板(该配置会将sql语句和查询的结果都打印到控制台)
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-
-fileRootPath: F:/logs/
-tempPath: F:/logs/tmpUpload/
+# F:/logs/
+# F:/logs/tmpUpload/
+fileRootPath: F:/fileTest/
+tempPath: F:/fileTest/tmpUpload/
 key: aosdifu234oiu348f
 secretLen: 4
 expireDays: 3

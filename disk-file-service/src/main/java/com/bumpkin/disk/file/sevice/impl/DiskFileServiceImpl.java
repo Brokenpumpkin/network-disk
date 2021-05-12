@@ -48,7 +48,7 @@ import java.util.List;
 public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> implements DiskFileService {
 
     @Value("${fileRootPath}")
-    public String fileRootPath;//static
+    public String fileRootPath;
 
     @Autowired
     public VirtualAddressService virtualAddressService;

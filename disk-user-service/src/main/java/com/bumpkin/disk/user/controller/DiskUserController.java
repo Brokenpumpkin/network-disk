@@ -6,11 +6,13 @@ import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.result.ResponseResult;
 import com.bumpkin.disk.user.dto.DiskUserLoginDto;
 import com.bumpkin.disk.user.dto.DiskUserRegisterDto;
+import com.bumpkin.disk.user.feign.AuthService;
 import com.bumpkin.disk.user.service.DiskUserService;
 import com.bumpkin.disk.user.service.VirtualAddressService;
 import com.bumpkin.disk.utils.RedisUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
@@ -24,12 +26,16 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+
+import static com.dyuproject.protostuff.MapSchema.MessageFactories.LinkedHashMap;
 
 /**
  * @Author: linzhiquan
  * @CreateTime: 2021/04/09 20:10
  */
 @Api(tags = "网盘用户服务")
+@Slf4j
 @RestController
 @RequestMapping(value = "/user")
 public class DiskUserController {
@@ -50,6 +56,9 @@ public class DiskUserController {
     private DiskUserService diskUserService;
 
     @Autowired
+    private AuthService authService;
+
+    @Autowired
     private RedisUtil redisUtil;
 
     @ApiOperation(value = "登录")
@@ -67,16 +76,26 @@ public class DiskUserController {
         if (!passwordEncoder.matches(password, diskUser.getPassword())) {
             return ResponseResult.createErrorResult("密码错误！");
         }
-        MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<>();
+//        MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<>();
+//        parameters.put("grant_type", Collections.singletonList("password"));
+//        parameters.put("username", Collections.singletonList(username));
+//        parameters.put("password", Collections.singletonList(password));
+//        RestTemplate restTemplate = new RestTemplate();
+//        restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor(clientId, clientSecret));
+//        JSONObject tokenJson = restTemplate.postForObject(tokenUrl +"/oauth/token",parameters, JSONObject.class);
+//        assert tokenJson != null;
+//        redisUtil.set(tokenJson.getString("access_token"), JSONUtil.toJsonStr(diskUser));
+//        return ResponseResult.createSuccessResult(tokenJson, "登录成功！");
+
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         parameters.put("grant_type", Collections.singletonList("password"));
         parameters.put("username", Collections.singletonList(username));
         parameters.put("password", Collections.singletonList(password));
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor(clientId, clientSecret));
-        JSONObject tokenJson = restTemplate.postForObject(tokenUrl +"/oauth/token",parameters, JSONObject.class);
-        assert tokenJson != null;
-        redisUtil.set(tokenJson.getString("access_token"), JSONUtil.toJsonStr(diskUser));
-        return ResponseResult.createSuccessResult(tokenJson, "登录成功！");
+        Object o = authService.postAccessToken(parameters);
+        log.info(o.toString());
+        java.util.LinkedHashMap linkedHashMap = (java.util.LinkedHashMap)o;
+        redisUtil.set(linkedHashMap.get("access_token").toString(), JSONUtil.toJsonStr(diskUser));
+        return ResponseResult.createSuccessResult(linkedHashMap, "登录成功！");
     }
 
     @Transactional
