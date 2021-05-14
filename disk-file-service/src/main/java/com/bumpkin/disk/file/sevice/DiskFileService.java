@@ -81,5 +81,6 @@ public interface DiskFileService extends IService<DiskFile> {
      */
     List<DiskFileVo> search(String keyword, DiskUser diskUser);
 
+    DiskFile checkMd5Exist(String md5ToStr);
     String getFileRootPath();
 }

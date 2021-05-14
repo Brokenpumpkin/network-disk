@@ -13,6 +13,7 @@ import com.bumpkin.disk.file.util.FileInfoUtil;
 import com.bumpkin.disk.file.util.WebUtil;
 import com.bumpkin.disk.file.vo.FileChunkVo;
 import com.bumpkin.disk.result.ResponseResult;
+import com.bumpkin.disk.utils.FileEncAndDecUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -106,9 +110,9 @@ public class UploadController {
         FileChunkVo fileChunkVo = new FileChunkVo();
 
         String file = fileRootPath + "/" + chunk.getIdentifier() + "/" + chunk.getFilename();
-
+        //FileInfoUtil.fileExists(file)
         //先判断整个文件是否已经上传过了，如果是，则告诉前端跳过上传，实现秒传
-        if(FileInfoUtil.fileExists(file)) {
+        if(diskFileService.checkMd5Exist(chunk.getIdentifier()) != null) {
             fileChunkVo.setSkipUpload(true);
             fileChunkVo.setLocation(file);
             return ResponseResult.createSuccessResult(fileChunkVo, "完整文件已存在，直接跳过上传，实现秒传");
@@ -126,7 +130,7 @@ public class UploadController {
 
     @ApiOperation(value = "所有分块上传完成后合并")
     @PostMapping("/mergeFile")
-    public String mergeFile(@RequestBody FileInfoDto fileInfoDto, HttpServletRequest request){
+    public String mergeFile(@RequestBody FileInfoDto fileInfoDto, HttpServletRequest request) throws Exception {
 
         String rlt = "FALURE";
 
@@ -155,10 +159,15 @@ public class UploadController {
 
         //文件合并成功后，保存记录至数据库
         if("200".equals(fileSuccess)) {
+            File tempFile = new File(file);
+            File encodeFile = new File(folder + "/" + diskFile.getSaveFileName());
+            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
+            FileEncAndDecUtil.encFile(tempFile, encodeFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
             if(diskFileService.getBaseMapper().insert(diskFile) > 0) {
                 virtualAddressService.addFile(diskFile, diskUser.getUserId(), fileInfoDto.getPath());
                 rlt = "SUCCESS";
             }
+            tempFile.delete();
         }
 
         return rlt;

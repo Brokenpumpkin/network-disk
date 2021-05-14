@@ -3,6 +3,7 @@ package com.bumpkin.disk.file.controller;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.system.SystemUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bumpkin.disk.entities.DiskUser;
 import com.bumpkin.disk.file.dto.CheckSecretDto;
 import com.bumpkin.disk.file.dto.CheckShareLinkDto;
@@ -32,8 +33,7 @@ import javax.annotation.Resource;
 import javax.naming.spi.ResolveResult;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -179,25 +179,70 @@ public class ShareController {
     @GetMapping(value = "/shareDownload")
     public void shareDownload(String link, HttpServletRequest request, HttpServletResponse response) throws Exception {
         LinkSecret linkSecret = linkSecretService.getLinkSecretBySecretLink(link);
+        QueryWrapper<VirtualAddress> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("file_id", linkSecret.getFileId());
+        queryWrapper.eq("user_id", linkSecret.getUserId());
+        VirtualAddress shareFile = virtualAddressService.getBaseMapper().selectOne(queryWrapper);
         DiskFile diskFile = diskFileService.getBaseMapper().selectById(linkSecret.getFileId());
-        String fileLocalLocation = diskFile.getFileLocalLocation();
 
         DiskUser diskUser = userService.getUserById(linkSecret.getUserId());
         // 文件解密
-        Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
-        File encfile = new File(fileLocalLocation + diskFile.getSaveFileName());
-        File decFile = new File(fileLocalLocation + diskFile.getOriginalName());
-        FileEncAndDecUtil.decFile(encfile, decFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
+//        Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
+//        File encfile = new File(fileLocalLocation + diskFile.getSaveFileName());
+//        File decFile = new File(fileLocalLocation + diskFile.getOriginalName());
+//        FileEncAndDecUtil.decFile(encfile, decFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
+//
+//        byte[] bytes = FileUtils.readFileToByteArray(decFile);
+//        MagicMatch magicMatch = Magic.getMagicMatch(decFile, true, false);
+//        response.setStatus(200);
+//        response.setContentType(magicMatch.getMimeType());
+//        response.setHeader("Access-Control-Expose-Headers", "fileName");
+//        response.setHeader("fileName", URLEncoder.encode(diskFile.getOriginalName(), "UTF-8"));
+//        response.setHeader("Accept-Ranges", "bytes");
+//        response.setHeader("Content-Disposition"
+//                , "attachment;filename=" + URLEncoder.encode(diskFile.getOriginalName(), "UTF-8"));
+//        response.getOutputStream().write(bytes);
 
-        byte[] bytes = FileUtils.readFileToByteArray(decFile);
-        MagicMatch magicMatch = Magic.getMagicMatch(decFile, true, false);
-        response.setStatus(200);
-        response.setContentType(magicMatch.getMimeType());
-        response.setHeader("Access-Control-Expose-Headers", "fileName");
-        response.setHeader("fileName", URLEncoder.encode(diskFile.getOriginalName(), "UTF-8"));
-        response.setHeader("Accept-Ranges", "bytes");
-        response.setHeader("Content-Disposition"
-                , "attachment;filename=" + URLEncoder.encode(diskFile.getOriginalName(), "UTF-8"));
-        response.getOutputStream().write(bytes);
+        BufferedInputStream bis = null;
+        BufferedOutputStream bos = null;
+        OutputStream fos = null;
+        try {
+            // 文件解密
+            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
+            File encfile = new File(diskFile.getFileLocalLocation() + diskFile.getSaveFileName());
+            File decFile = new File(diskFile.getFileLocalLocation() + diskFile.getOriginalName());
+            FileEncAndDecUtil.decFile(encfile, decFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
+
+            //不加密
+//            File file = new File(fileLocalLocation);
+//            bis = new BufferedInputStream(new FileInputStream(fileLocalLocation));
+
+            bis = new BufferedInputStream(new FileInputStream(decFile));
+            fos = response.getOutputStream();
+            bos = new BufferedOutputStream(fos);
+            MagicMatch magicMatch = Magic.getMagicMatch(decFile, true, false);
+            response.setStatus(200);
+            response.setContentType(magicMatch.getMimeType());
+            response.setHeader("Access-Control-Expose-Headers", "fileName");
+            response.setHeader("fileName", URLEncoder.encode(shareFile.getUserFileName(), "UTF-8"));
+            response.setHeader("Accept-Ranges", "bytes");
+            response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(shareFile.getUserFileName(), "UTF-8"));
+            int byteRead = 0;
+            byte[] buffer = new byte[8192];
+            while ((byteRead = bis.read(buffer, 0, 8192)) != -1) {
+                bos.write(buffer, 0, byteRead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bos.flush();
+                bis.close();
+                fos.close();
+                bos.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

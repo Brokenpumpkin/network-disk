@@ -6,6 +6,7 @@ import com.bumpkin.disk.file.entity.VirtualAddress;
 import com.bumpkin.disk.file.sevice.DiskFileService;
 import com.bumpkin.disk.file.sevice.VirtualAddressService;
 import com.bumpkin.disk.file.util.WebUtil;
+import com.bumpkin.disk.utils.FileEncAndDecUtil;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jmimemagic.Magic;
@@ -21,6 +22,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 
 /**
  * @Author: linzhiquan
@@ -71,17 +74,22 @@ public class DownloadController {
         VirtualAddress virtualAddress = virtualAddressService.getDiskFileByFileNameAndParentPathAndUserId(fileName, path, diskUser.getUserId());
         String fileId = virtualAddress.getFileId();
         DiskFile diskFile = diskFileService.getBaseMapper().selectById(fileId);
-        String fileLocalLocation = diskFile.getFileLocalLocation() + fileName;
 
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
         OutputStream fos = null;
         try {
-            File file = new File(fileLocalLocation);
-            bis = new BufferedInputStream(new FileInputStream(fileLocalLocation));
+            // 文件解密
+            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
+            File encfile = new File(diskFile.getFileLocalLocation() + diskFile.getSaveFileName());
+            File decFile = new File(diskFile.getFileLocalLocation() + diskFile.getOriginalName());
+            FileEncAndDecUtil.decFile(encfile, decFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
+//            File file = new File(fileLocalLocation);
+//            bis = new BufferedInputStream(new FileInputStream(fileLocalLocation));
+            bis = new BufferedInputStream(new FileInputStream(decFile));
             fos = response.getOutputStream();
             bos = new BufferedOutputStream(fos);
-            MagicMatch magicMatch = Magic.getMagicMatch(file, true, false);
+            MagicMatch magicMatch = Magic.getMagicMatch(decFile, true, false);
             response.setStatus(200);
             response.setContentType(magicMatch.getMimeType());
             response.setHeader("Access-Control-Expose-Headers", "fileName");

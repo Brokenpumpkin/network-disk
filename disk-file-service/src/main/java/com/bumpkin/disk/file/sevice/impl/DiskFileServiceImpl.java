@@ -224,7 +224,8 @@ public class DiskFileServiceImpl extends ServiceImpl<DiskFileMapper, DiskFile> i
         return fileRootPath;
     }
 
-    private DiskFile checkMd5Exist(String md5ToStr) {
+    @Override
+    public DiskFile checkMd5Exist(String md5ToStr) {
         QueryWrapper<DiskFile> wrapper = new QueryWrapper<>();
         wrapper.eq("file_md5", md5ToStr);
         return this.baseMapper.selectOne(wrapper);
