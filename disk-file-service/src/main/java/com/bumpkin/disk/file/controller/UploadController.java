@@ -109,7 +109,7 @@ public class UploadController {
     public ResponseResult checkChunk(TChunkInfo chunk, HttpServletResponse response) {
         FileChunkVo fileChunkVo = new FileChunkVo();
 
-        String file = fileRootPath + "/" + chunk.getIdentifier() + "/" + chunk.getFilename();
+        String file = fileRootPath + chunk.getIdentifier() + "/" + chunk.getFilename();
         //FileInfoUtil.fileExists(file)
         //先判断整个文件是否已经上传过了，如果是，则告诉前端跳过上传，实现秒传
         if(diskFileService.checkMd5Exist(chunk.getIdentifier()) != null) {
@@ -125,7 +125,7 @@ public class UploadController {
             fileChunkVo.setUploadedChunks(list);
             return ResponseResult.createSuccessResult(fileChunkVo, "部分文件块已存在，继续上传剩余文件块，实现断点续传");
         }
-        return ResponseResult.createErrorResult("上传失败！");
+        return ResponseResult.createSuccessResult(fileChunkVo, "上传成功！");
     }
 
     @ApiOperation(value = "所有分块上传完成后合并")
@@ -155,14 +155,16 @@ public class UploadController {
         String fileSuccess = FileInfoUtil.merge(file, folder, filename);
 
         diskFile.setId(uuid);
+        diskFile.setFirstUploaderPassword(diskUser.getPassword());
+        diskFile.setFirstUploaderSalt(FileEncAndDecUtil.initSalt());
         diskFile.setFileLocalLocation(folder + "/");
 
         //文件合并成功后，保存记录至数据库
         if("200".equals(fileSuccess)) {
             File tempFile = new File(file);
             File encodeFile = new File(folder + "/" + diskFile.getSaveFileName());
-            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
-            FileEncAndDecUtil.encFile(tempFile, encodeFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
+            Key key = FileEncAndDecUtil.toKey(diskFile.getFirstUploaderPassword());
+            FileEncAndDecUtil.encFile(tempFile, encodeFile, key, diskFile.getFirstUploaderSalt().getBytes(StandardCharsets.UTF_8));
             if(diskFileService.getBaseMapper().insert(diskFile) > 0) {
                 virtualAddressService.addFile(diskFile, diskUser.getUserId(), fileInfoDto.getPath());
                 rlt = "SUCCESS";

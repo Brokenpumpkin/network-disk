@@ -50,5 +50,15 @@ public class DiskFile {
      */
     private String fileMd5;
 
+    /**
+     * 第一次上传该文件的用户的密码
+     */
+    private String firstUploaderPassword;
+
+    /**
+     * 第一次上传该文件的用户的盐
+     */
+    private String firstUploaderSalt;
+
     private Date createTime;
 }

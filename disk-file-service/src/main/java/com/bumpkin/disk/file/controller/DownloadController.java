@@ -78,12 +78,13 @@ public class DownloadController {
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
         OutputStream fos = null;
+
+        File encFile = new File(diskFile.getFileLocalLocation() + diskFile.getSaveFileName());
+        File decFile = new File(diskFile.getFileLocalLocation() + diskFile.getOriginalName());
         try {
             // 文件解密
-            Key key = FileEncAndDecUtil.toKey(diskUser.getPassword());
-            File encfile = new File(diskFile.getFileLocalLocation() + diskFile.getSaveFileName());
-            File decFile = new File(diskFile.getFileLocalLocation() + diskFile.getOriginalName());
-            FileEncAndDecUtil.decFile(encfile, decFile, key, diskUser.getSalt().getBytes(StandardCharsets.UTF_8));
+            Key key = FileEncAndDecUtil.toKey(diskFile.getFirstUploaderPassword());
+            FileEncAndDecUtil.decFile(encFile, decFile, key, diskFile.getFirstUploaderSalt().getBytes(StandardCharsets.UTF_8));
 //            File file = new File(fileLocalLocation);
 //            bis = new BufferedInputStream(new FileInputStream(fileLocalLocation));
             bis = new BufferedInputStream(new FileInputStream(decFile));
@@ -112,6 +113,7 @@ public class DownloadController {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            decFile.delete();
         }
     }
 }
